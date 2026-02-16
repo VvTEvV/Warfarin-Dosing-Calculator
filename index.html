@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Warfarin Smart Calculator</title>
+    <title>Warfarin Smart Calculator Pro (Patient Name)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     
     <script>
         tailwind.config = {
@@ -21,25 +22,34 @@
         }
     </script>
     <style>
-        body { background-color: #f8fafc; }
+        body { background-color: #f1f5f9; }
         .fade-in { animation: fadeIn 0.5s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .pill-card { transition: all 0.3s ease; }
         .pill-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4 text-slate-700">
+<body class="min-h-screen flex flex-col items-center p-4 text-slate-700">
 
-    <div class="w-full max-w-2xl bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
+    <div class="w-full max-w-3xl bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden mb-8">
         
         <div class="bg-gradient-to-r from-slate-800 to-slate-900 p-8 text-center text-white relative">
             <div class="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/medical-icons.png')]"></div>
             <h1 class="text-3xl font-bold relative z-10"><i class="fa-solid fa-heart-pulse text-rose-500 mr-2"></i>Warfarin Calculator</h1>
-            <p class="text-slate-300 text-sm mt-1 relative z-10">คำนวณและจัดกลุ่มตารางยาอัตโนมัติ</p>
+            <p class="text-slate-300 text-sm mt-1 relative z-10">ระบบคำนวณและฐานข้อมูลผู้ป่วย</p>
         </div>
 
         <div class="p-6 md:p-8 space-y-6">
             
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                <label class="block text-sm font-bold text-slate-700 mb-2">ชื่อ-นามสกุล ผู้ป่วย (Patient Name)</label>
+                <div class="relative">
+                    <i class="fa-solid fa-user absolute left-4 top-3.5 text-slate-400"></i>
+                    <input type="text" id="patientName" placeholder="ระบุชื่อผู้ป่วย..." 
+                        class="w-full pl-10 pr-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none transition font-bold text-lg text-slate-800">
+                </div>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-2">Total Weekly Dose (TWD)</label>
@@ -61,13 +71,12 @@
 
             <button onclick="calculateDose()" 
                 class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-brand-200 transition transform active:scale-95 text-lg">
-                คำนวณผลลัพธ์
+                <i class="fa-solid fa-calculator mr-2"></i> คำนวณผลลัพธ์
             </button>
 
             <div id="resultSection" class="hidden space-y-6 fade-in pt-4 border-t border-slate-100">
                 
-                <div id="statusCard" class="p-5 rounded-xl border-l-4 flex items-start gap-4 shadow-sm bg-white">
-                    </div>
+                <div id="statusCard" class="p-5 rounded-xl border-l-4 flex items-start gap-4 shadow-sm bg-white"></div>
 
                 <div id="adjContainer" class="hidden text-center">
                     <p class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-3">ปรับขนาดยาตามเปอร์เซ็นต์</p>
@@ -78,8 +87,20 @@
 
                 <div id="regimenSection"></div>
 
+                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200 mt-6 relative overflow-hidden">
+                    <div class="relative z-10">
+                        <label class="block text-sm font-bold text-slate-700 mb-2"><i class="fa-regular fa-note-sticky mr-1"></i> เพิ่มบันทึกช่วยจำ (Note)</label>
+                        <textarea id="userNote" rows="2" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none text-slate-700" placeholder="ระบุอาการ, นัดหมาย หรือเหตุผลการปรับยา..."></textarea>
+                        
+                        <button onclick="saveDataToHistory()" 
+                            class="mt-4 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูลลงประวัติ
+                        </button>
+                    </div>
+                </div>
+
                 <button onclick="resetCalculator()" class="w-full py-3 text-slate-400 hover:text-slate-600 font-medium transition text-sm">
-                    <i class="fa-solid fa-refresh mr-1"></i> ล้างข้อมูลและเริ่มใหม่
+                    <i class="fa-solid fa-refresh mr-1"></i> ล้างหน้าจอคำนวณ
                 </button>
             </div>
 
@@ -89,40 +110,223 @@
                     <strong>Clinical Note:</strong> ถ้าพบ Major bleeding with any INR ให้ Vitamin K 10 mg IV plus FFP และ Repeat Vitamin K every 12 hours if needed.
                 </div>
             </div>
+        </div>
+    </div>
 
+    <div class="w-full max-w-6xl mb-12">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-4 px-2 gap-4">
+            <h2 class="text-xl font-bold text-slate-700"><i class="fa-solid fa-clock-rotate-left mr-2"></i>ประวัติการบันทึก (History)</h2>
+            
+            <div class="flex flex-wrap gap-2 justify-center">
+                <button onclick="backupData()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-bold shadow text-sm transition flex items-center gap-2">
+                    <i class="fa-solid fa-download"></i> Backup
+                </button>
+                <button onclick="document.getElementById('importFile').click()" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-4 py-2 rounded-lg font-bold shadow-sm text-sm transition flex items-center gap-2">
+                    <i class="fa-solid fa-upload"></i> Restore
+                </button>
+                <input type="file" id="importFile" hidden accept=".json" onchange="restoreData(this)">
+                
+                <div class="w-px h-6 bg-slate-300 mx-2 hidden md:block"></div>
+
+                <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-bold shadow text-sm transition flex items-center gap-2">
+                    <i class="fa-solid fa-file-excel"></i> Export Excel
+                </button>
+                <button onclick="clearAllHistory()" class="bg-red-100 hover:bg-red-200 text-red-600 px-4 py-2 rounded-lg font-bold text-sm transition" title="ลบทั้งหมด">
+                    <i class="fa-solid fa-trash-can"></i> ลบทั้งหมด
+                </button>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-slate-600">
+                    <thead class="text-xs text-slate-700 uppercase bg-slate-100 border-b border-slate-200">
+                        <tr>
+                            <th class="px-4 py-3">วัน/เวลา</th>
+                            <th class="px-4 py-3 text-brand-700">ชื่อผู้ป่วย</th> <th class="px-4 py-3">INR</th>
+                            <th class="px-4 py-3">TWD (เดิม)</th>
+                            <th class="px-4 py-3">TWD (ใหม่)</th>
+                            <th class="px-4 py-3">สถานะ/คำแนะนำ</th>
+                            <th class="px-4 py-3">Note</th>
+                            <th class="px-4 py-3 text-center">จัดการ</th> </tr>
+                    </thead>
+                    <tbody id="historyTableBody">
+                        </tbody>
+                </table>
+            </div>
+            <div id="emptyHistoryMsg" class="p-12 text-center text-slate-400 flex flex-col items-center">
+                <i class="fa-solid fa-folder-open text-4xl mb-3 opacity-30"></i>
+                ยังไม่มีข้อมูลที่บันทึก
+            </div>
         </div>
     </div>
 
     <script>
         let currentTWD = 0;
         let currentINR = 0;
+        let currentCalculatedTWD = 0;
+        let currentStatusText = "";
+        
+        // --- History & Storage Logic ---
+        let savedHistory = JSON.parse(localStorage.getItem('warfarin_history')) || [];
+        renderHistoryTable();
 
-        // --- Core Logic ---
+        function saveDataToHistory() {
+            const name = document.getElementById('patientName').value.trim(); // Get Name
+            const note = document.getElementById('userNote').value.trim();
+            
+            if (!name) {
+                alert("กรุณาระบุชื่อผู้ป่วยก่อนบันทึก");
+                document.getElementById('patientName').focus();
+                return;
+            }
+
+            const now = new Date();
+            const dateStr = now.toLocaleString('th-TH');
+
+            const record = {
+                name: name, // Store Name
+                date: dateStr,
+                inr: currentINR,
+                twd_old: currentTWD,
+                twd_new: currentCalculatedTWD,
+                status: currentStatusText,
+                note: note
+            };
+
+            savedHistory.unshift(record); 
+            localStorage.setItem('warfarin_history', JSON.stringify(savedHistory));
+
+            alert("บันทึกข้อมูลเรียบร้อยแล้ว!");
+            // Optional: Clear note but keep name? or clear both? Let's clear note only for workflow ease, user can change name if needed.
+            document.getElementById('userNote').value = ""; 
+            renderHistoryTable();
+            document.querySelector('.fa-clock-rotate-left').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function renderHistoryTable() {
+            const tbody = document.getElementById('historyTableBody');
+            const msg = document.getElementById('emptyHistoryMsg');
+            tbody.innerHTML = '';
+            
+            if (savedHistory.length === 0) {
+                msg.classList.remove('hidden');
+                return;
+            }
+            msg.classList.add('hidden');
+
+            savedHistory.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.className = "bg-white border-b hover:bg-slate-50 transition group";
+                tr.innerHTML = `
+                    <td class="px-4 py-4 whitespace-nowrap text-xs text-slate-500">${item.date}</td>
+                    <td class="px-4 py-4 font-bold text-slate-800">${item.name || '-'}</td>
+                    <td class="px-4 py-4 font-bold text-brand-600">${item.inr}</td>
+                    <td class="px-4 py-4 text-slate-500">${item.twd_old}</td>
+                    <td class="px-4 py-4 font-bold text-emerald-600">${item.twd_new}</td>
+                    <td class="px-4 py-4 text-xs">
+                        <span class="bg-slate-100 text-slate-600 py-1 px-2 rounded border border-slate-200 block w-fit max-w-[150px] truncate" title="${item.status}">${item.status}</span>
+                    </td>
+                    <td class="px-4 py-4 text-slate-500 text-sm max-w-[150px] truncate" title="${item.note}">${item.note || '-'}</td>
+                    <td class="px-4 py-4 text-center">
+                        <button onclick="deleteSingleHistory(${index})" class="text-slate-300 hover:text-red-500 transition p-2 rounded-full hover:bg-red-50" title="ลบรายการนี้">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- NEW: Delete Single Item Function ---
+        function deleteSingleHistory(index) {
+            if(confirm('คุณต้องการลบรายการนี้ใช่หรือไม่?')) {
+                savedHistory.splice(index, 1); // Remove item at index
+                localStorage.setItem('warfarin_history', JSON.stringify(savedHistory)); // Update Storage
+                renderHistoryTable(); // Re-render
+            }
+        }
+
+        function clearAllHistory() {
+            if(confirm('คำเตือน: คุณต้องการลบประวัติ "ทั้งหมด" ใช่หรือไม่? (ไม่สามารถกู้คืนได้เว้นแต่จะมีไฟล์ Backup)')) {
+                savedHistory = [];
+                localStorage.removeItem('warfarin_history');
+                renderHistoryTable();
+            }
+        }
+
+        // --- Backup / Restore / Export ---
+
+        function backupData() {
+            if (savedHistory.length === 0) return alert("ไม่มีข้อมูลให้สำรอง");
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(savedHistory));
+            const dlNode = document.createElement('a');
+            dlNode.setAttribute("href", dataStr);
+            dlNode.setAttribute("download", "warfarin_backup_" + new Date().toISOString().slice(0,10) + ".json");
+            document.body.appendChild(dlNode);
+            dlNode.click();
+            dlNode.remove();
+        }
+
+        function restoreData(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const loadedData = JSON.parse(e.target.result);
+                    if (Array.isArray(loadedData)) {
+                        if(confirm(`พบข้อมูล ${loadedData.length} รายการ ต้องการนำเข้าหรือไม่? (ข้อมูลเก่าจะถูกแทนที่)`)) {
+                            savedHistory = loadedData;
+                            localStorage.setItem('warfarin_history', JSON.stringify(savedHistory));
+                            renderHistoryTable();
+                            alert("กู้คืนข้อมูลสำเร็จ!");
+                        }
+                    } else { alert("ไฟล์ไม่ถูกต้อง"); }
+                } catch (error) { alert("Error reading file"); }
+            };
+            reader.readAsText(file);
+            input.value = '';
+        }
+
+        function exportToExcel() {
+            if (savedHistory.length === 0) return alert("ไม่มีข้อมูลในประวัติ");
+            const excelData = savedHistory.map(item => ({
+                "วันที่บันทึก": item.date,
+                "ชื่อผู้ป่วย": item.name || '-', // Add to Excel
+                "ค่า INR": item.inr,
+                "TWD เดิม (mg)": item.twd_old,
+                "TWD ใหม่ (mg)": item.twd_new,
+                "ผลลัพธ์": item.status,
+                "Note": item.note
+            }));
+            const ws = XLSX.utils.json_to_sheet(excelData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Warfarin_History");
+            XLSX.writeFile(wb, `Warfarin_Patient_Data_${new Date().toISOString().slice(0,10)}.xlsx`);
+        }
+
+        // --- Calculation Logic (No Changes) ---
 
         function calculateDose() {
             const twdInput = document.getElementById('twd').value;
             const inrInput = document.getElementById('inr').value;
-
-            if (!twdInput || !inrInput) return alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+            if (!twdInput || !inrInput) return alert('กรุณากรอกข้อมูล TWD และ INR');
 
             currentTWD = parseFloat(twdInput);
             currentINR = parseFloat(inrInput);
+            currentCalculatedTWD = currentTWD; 
 
             document.getElementById('resultSection').classList.remove('hidden');
             setTimeout(() => document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' }), 100);
-
             analyzeINR();
         }
 
         function analyzeINR() {
-            const statusCard = document.getElementById('statusCard');
-            const adjContainer = document.getElementById('adjContainer');
             const newDoseDisplay = document.getElementById('newDoseDisplay');
-            
-            // Reset
             newDoseDisplay.classList.add('hidden');
             document.getElementById('regimenSection').innerHTML = '';
-            adjContainer.classList.add('hidden');
+            document.getElementById('adjContainer').classList.add('hidden');
 
             let config = { color: '', icon: '', title: '', text: '', btns: [], type: '' };
 
@@ -132,7 +336,6 @@
                 config = { color: 'yellow', icon: 'fa-arrow-trend-down', title: 'ค่า INR ค่อนข้างต่ำ', text: 'ควรปรับเพิ่มขนาดยา', btns: [5, 7.5, 10], type: 'increase' };
             } else if (currentINR >= 2.0 && currentINR <= 3.0) {
                 config = { color: 'green', icon: 'fa-check-circle', title: 'Excellent! INR ตามเป้าหมาย', text: 'ให้คงขนาดยาเดิมต่อไป', btns: [], type: 'keep' };
-                // Auto calculate
                 calculateRegimen(currentTWD);
                 renderNewTWD(currentTWD);
             } else if (currentINR >= 3.1 && currentINR <= 3.9) {
@@ -145,6 +348,7 @@
                 config = { color: 'red', icon: 'fa-skull-crossbones', title: 'CRITICAL', text: 'Hold ยา + พิจารณา Vitamin K ทันที', btns: [], type: 'critical' };
             }
 
+            currentStatusText = `${config.title}: ${config.text}`;
             renderStatus(config);
             if (config.btns.length > 0) renderButtons(config.btns, config.type);
         }
@@ -157,43 +361,23 @@
                 red: 'bg-red-50 border-red-600 text-red-800'
             };
             const theme = colors[color] || colors.red;
-            
             document.getElementById('statusCard').className = `p-5 rounded-xl border-l-4 flex items-start gap-4 shadow-sm ${theme}`;
-            document.getElementById('statusCard').innerHTML = `
-                <div class="mt-1 text-2xl"><i class="fa-solid ${icon}"></i></div>
-                <div>
-                    <h3 class="font-bold text-lg">${title}</h3>
-                    <p class="opacity-90 text-sm">${text}</p>
-                </div>
-            `;
+            document.getElementById('statusCard').innerHTML = `<div class="mt-1 text-2xl"><i class="fa-solid ${icon}"></i></div><div><h3 class="font-bold text-lg">${title}</h3><p class="opacity-90 text-sm">${text}</p></div>`;
         }
 
         function renderButtons(pcts, type) {
             const container = document.getElementById('adjButtons');
             document.getElementById('adjContainer').classList.remove('hidden');
-            
             const isInc = type === 'increase';
-            const colorClass = isInc 
-                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-500 hover:text-white' 
-                : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-500 hover:text-white';
+            const colorClass = isInc ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-500 hover:text-white' : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-500 hover:text-white';
             const icon = isInc ? '+' : '-';
-
-            container.innerHTML = pcts.map(p => `
-                <button onclick="applyAdjustment(${p}, '${type}')" 
-                    class="flex-1 min-w-[80px] py-3 px-4 rounded-xl border font-bold text-lg transition ${colorClass}">
-                    ${icon}${p}%
-                </button>
-            `).join('');
+            container.innerHTML = pcts.map(p => `<button onclick="applyAdjustment(${p}, '${type}')" class="flex-1 min-w-[80px] py-3 px-4 rounded-xl border font-bold text-lg transition ${colorClass}">${icon}${p}%</button>`).join('');
         }
 
         function applyAdjustment(pct, type) {
-            let val = type === 'increase' 
-                ? currentTWD * (1 + pct/100) 
-                : currentTWD * (1 - pct/100);
-            
-            // Round logic: Nearest 0.5
+            let val = type === 'increase' ? currentTWD * (1 + pct/100) : currentTWD * (1 - pct/100);
             val = Math.round(val * 2) / 2;
-            
+            currentCalculatedTWD = val;
             renderNewTWD(val);
             calculateRegimen(val);
         }
@@ -212,167 +396,87 @@
             `;
         }
 
-        // --- Regimen Algorithm ---
-
         function calculateRegimen(targetTWD) {
-            const available = [
-                { strength: 5, label: '5 mg' },
-                { strength: 3, label: '3 mg' },
-                { strength: 2, label: '2 mg' }
-            ];
-
-            // 1. Find best math combination
+            const available = [{ strength: 5, label: '5 mg' }, { strength: 3, label: '3 mg' }, { strength: 2, label: '2 mg' }];
             let bestSolution = null;
             let bestSD = Infinity;
 
             for (let s1 of available) {
-                for (let t1 of [0, 0.5, 1, 1.5, 2]) { // Tabs 1
+                for (let t1 of [0, 0.5, 1, 1.5, 2]) {
                     for (let s2 of available) {
-                        for (let t2 of [0, 0.5, 1, 1.5, 2]) { // Tabs 2
-                            
+                        for (let t2 of [0, 0.5, 1, 1.5, 2]) {
                             const dose1 = s1.strength * t1;
                             const dose2 = s2.strength * t2;
-
-                            // Loop Days Split (0-7)
                             for (let d1 = 0; d1 <= 7; d1++) {
                                 const d2 = 7 - d1;
                                 const total = (dose1 * d1) + (dose2 * d2);
-
-                                // Check TWD match
                                 if (Math.abs(total - targetTWD) < 0.01) {
-                                    
                                     let patterns = [];
                                     if (d1 > 0) patterns.push({ dose: dose1, days: d1, strength: s1, tabs: t1 });
                                     if (d2 > 0) patterns.push({ dose: dose2, days: d2, strength: s2, tabs: t2 });
-
-                                    // Merge if dose is same
-                                    if (patterns.length === 2 && patterns[0].dose === patterns[1].dose) {
-                                        patterns = [{ ...patterns[0], days: 7 }];
-                                    }
-
+                                    if (patterns.length === 2 && patterns[0].dose === patterns[1].dose) patterns = [{ ...patterns[0], days: 7 }];
                                     if (patterns.length > 2) continue;
 
-                                    // Calc SD
                                     let daily = [];
                                     patterns.forEach(p => { for(let k=0; k<p.days; k++) daily.push(p.dose); });
-                                    
                                     const mean = daily.reduce((a,b)=>a+b,0)/7;
                                     const variance = daily.reduce((a,b)=>a+Math.pow(b-mean,2),0)/7;
                                     const sd = Math.sqrt(variance);
 
-                                    if (sd < 3 && sd < bestSD) {
-                                        bestSD = sd;
-                                        bestSolution = { patterns, sd };
-                                    }
+                                    if (sd < 3 && sd < bestSD) { bestSD = sd; bestSolution = { patterns, sd }; }
                                 }
                             }
                         }
                     }
                 }
             }
-
             renderRegimenCards(bestSolution, targetTWD);
         }
 
-        // --- Render UI (The "Grouped" Display) ---
-
         function renderRegimenCards(solution, targetTWD) {
             const container = document.getElementById('regimenSection');
-            
             if (!solution) {
-                container.innerHTML = `
-                    <div class="text-center p-8 bg-slate-50 rounded-xl text-slate-500">
-                        <i class="fa-solid fa-file-circle-xmark text-4xl mb-2 text-slate-300"></i>
-                        <p>ไม่สามารถคำนวณสูตรยาที่ลงตัวได้ (SD < 3)</p>
-                        <p class="text-sm">กรุณาปรึกษาแพทย์เพื่อปรับ TWD</p>
-                    </div>`;
+                container.innerHTML = `<div class="text-center p-8 bg-slate-50 rounded-xl text-slate-500">...ไม่สามารถคำนวณได้...</div>`;
                 return;
             }
-
             const dayNames = ['จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์', 'อาทิตย์'];
             let html = `<div class="space-y-3">`;
             let currentDayIndex = 0;
-
             solution.patterns.forEach((p, index) => {
-                // Calculate Day Range String
                 const startDay = dayNames[currentDayIndex];
                 const endDay = dayNames[currentDayIndex + p.days - 1];
                 let dayLabel = (p.days === 1) ? startDay : `${startDay} - ${endDay}`;
-                
-                // Special case for 7 days
                 if (p.days === 7) dayLabel = "กินทุกวัน (จันทร์ - อาทิตย์)";
                 
-                // Calculate Total for this row (Calculation method)
                 const rowTotal = p.dose * p.days;
-
-                // Generate Pill Text
-                let pillText = "";
-                let subText = "";
+                let pillText = "", subText = "";
                 
                 if (p.dose === 0) {
                     pillText = `<span class="text-slate-400">หยุดยา</span>`;
-                    subText = `
-                        <div class="font-bold text-slate-400 text-lg">0 mg/วัน</div>
-                        <div class="text-xs text-slate-300 mt-1">0 mg × ${p.days} วัน = 0 mg</div>
-                    `;
+                    subText = `<div class="text-xs text-slate-300 mt-1">0 mg × ${p.days} วัน = 0 mg</div>`;
                 } else {
                     const tabStr = p.tabs === 0.5 ? 'ครึ่งเม็ด' : p.tabs === 1.5 ? '1 เม็ดครึ่ง' : p.tabs + ' เม็ด';
-                    
-                    // Design: Main Pill Text
-                    pillText = `
-                        <span class="font-bold text-slate-700 text-lg">
-                            ${p.strength.label} <span class="text-brand-600">(${tabStr})</span>
-                        </span>`;
-                        
-                    // Design: Dose sum & Calc (NEW: Added small calculation text)
-                    subText = `
-                        <div class="font-bold text-slate-500 text-lg">(${p.dose} mg/วัน)</div>
-                        <div class="text-xs text-slate-400 mt-1 font-medium bg-slate-100 inline-block px-2 py-0.5 rounded">
-                            ${p.dose} mg × ${p.days} วัน = ${rowTotal} mg
-                        </div>
-                    `;
+                    pillText = `<span class="font-bold text-slate-700 text-lg">${p.strength.label} <span class="text-brand-600">(${tabStr})</span></span>`;
+                    subText = `<div class="font-bold text-slate-500 text-lg">(${p.dose} mg/วัน)</div>
+                        <div class="text-xs text-slate-400 mt-1 font-medium bg-slate-100 inline-block px-2 py-0.5 rounded">${p.dose} mg × ${p.days} วัน = ${rowTotal} mg</div>`;
                 }
-
-                // Card Theme
                 const cardBg = index === 0 ? 'bg-white border-brand-200 shadow-brand-100' : 'bg-slate-50 border-slate-200';
                 const dayBadgeColor = index === 0 ? 'bg-brand-100 text-brand-700' : 'bg-slate-200 text-slate-600';
-
-                html += `
-                    <div class="pill-card border rounded-2xl p-4 flex justify-between items-center shadow-sm ${cardBg}">
-                        <div>
-                            <div class="inline-block px-3 py-1 rounded-full text-xs font-bold mb-2 ${dayBadgeColor}">
-                                ${dayLabel}
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <i class="fa-solid fa-capsules text-slate-300"></i>
-                                ${pillText}
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            ${subText}
-                        </div>
-                    </div>
-                `;
-
+                html += `<div class="pill-card border rounded-2xl p-4 flex justify-between items-center shadow-sm ${cardBg}">
+                    <div><div class="inline-block px-3 py-1 rounded-full text-xs font-bold mb-2 ${dayBadgeColor}">${dayLabel}</div>
+                    <div class="flex items-center gap-2"><i class="fa-solid fa-capsules text-slate-300"></i>${pillText}</div></div>
+                    <div class="text-right">${subText}</div></div>`;
                 currentDayIndex += p.days;
             });
-
             html += `</div>`;
-            
-            // Add SD Badge
-            html += `
-                <div class="text-right mt-2 flex justify-end items-center gap-2">
-                     <span class="text-xs text-slate-300">Total Check: ${(Math.round(solution.patterns.reduce((a,b)=>a+(b.dose*b.days),0)*2)/2).toFixed(1)} mg</span>
-                     <span class="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded">SD: ${solution.sd.toFixed(2)}</span>
-                </div>
-            `;
-
             container.innerHTML = html;
         }
 
         function resetCalculator() {
             document.getElementById('twd').value = '';
             document.getElementById('inr').value = '';
+            document.getElementById('userNote').value = '';
+            document.getElementById('patientName').value = '';
             document.getElementById('resultSection').classList.add('hidden');
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
