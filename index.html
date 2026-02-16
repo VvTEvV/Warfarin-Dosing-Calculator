@@ -2,381 +2,380 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Warfarin Calculator (Strict Schedule)</title>
-    <style>
-        :root {
-            --primary: #0056b3;
-            --bg-color: #f4f7f6;
-            --success: #28a745;
-            --danger: #dc3545;
-        }
-        body {
-            font-family: 'Sarabun', sans-serif;
-            background-color: var(--bg-color);
-            margin: 0;
-            padding: 20px 15px;
-            color: #333;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .container {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            max-width: 600px;
-            margin: 0 auto;
-        }
-        h2 {
-            text-align: center;
-            margin-top: 0;
-            color: #333;
-            font-size: 1.4rem;
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            font-size: 1rem;
-        }
-        input[type="text"], input[type="number"] {
-            width: 100%;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 19px;
-            box-sizing: border-box;
-            background-color: #fff;
-            appearance: none;
-            -webkit-appearance: none;
-        }
-        .btn-main {
-            width: 100%;
-            padding: 16px;
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            margin-top: 10px;
-        }
-        .btn-main:active { transform: scale(0.96); }
-
-        /* Selection Box */
-        .selection-box {
-            display: none;
-            background-color: #e9f5ff;
-            border: 2px solid #b8daff;
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 20px;
-            text-align: center;
-        }
-        .selection-btns {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 15px;
-        }
-        .btn-option {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 6px;
-            font-size: 1rem;
-            font-weight: bold;
-            color: white;
-            cursor: pointer;
-        }
-        .btn-option.increase { background-color: var(--success); }
-        .btn-option.decrease { background-color: var(--danger); }
-
-        /* Result Area */
-        .result-box {
-            margin-top: 30px;
-            padding: 20px;
-            border: 2px solid #e9ecef;
-            border-radius: 10px;
-            background-color: #fff;
-            display: none;
-        }
-        .alert {
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-weight: bold;
-            text-align: center;
-        }
-        .alert-high { background-color: #ffebe9; color: #cc0f35; }
-        .alert-ok { background-color: #e3f9e5; color: #0f5132; }
-        .alert-low { background-color: #fff8e1; color: #997404; }
-        
-        .twd-display {
-            text-align: center;
-            background: #f1f8ff;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        
-        /* ตารางยา */
-        .pill-card {
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .pill-header {
-            font-weight: bold;
-            color: #0056b3;
-            margin-bottom: 5px;
-            font-size: 1.1rem;
-        }
-        .pill-detail {
-            font-size: 1rem;
-            color: #333;
-        }
-        .pill-days {
-            margin-top: 5px;
-            font-size: 0.95rem;
-            color: #666;
-            background: #eee;
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 4px;
-        }
-    </style>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
-</head>
-<body>
-
-<div class="container">
-    <h2>💊 โปรแกรมปรับยา Warfarin @By VvTEvV</h2>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warfarin Smart Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <div class="form-group">
-        <label>ค่า INR ปัจจุบัน</label>
-        <input type="text" id="inrVal" inputmode="decimal" placeholder="เช่น 2.5">
-    </div>
-
-    <div class="form-group">
-        <label>TWD เดิม (มก./สัปดาห์)</label>
-        <input type="text" id="currentTwd" inputmode="decimal" placeholder="เช่น 21">
-    </div>
-
-    <button type="button" class="btn-main" onclick="checkGuideline()">คำนวณ</button>
-
-    <div id="selectionArea" class="selection-box">
-        <div id="selectionText" style="font-weight:bold; color:#004085;"></div>
-        <div id="selectionButtons" class="selection-btns"></div>
-    </div>
-
-    <div id="resultArea" class="result-box">
-        <div id="statusAlert" class="alert"></div>
-        
-        <div id="planSection">
-            <div style="text-align:center; margin-bottom:10px;">
-                แผน: <span id="adjustmentText" style="font-weight:bold;"></span>
-            </div>
-
-            <div class="twd-display">
-                <span style="font-size:1.8rem; font-weight:bold; color:#0056b3;" id="newTwdVal"></span>
-                <span style="font-size:0.9rem;"> mg / week</span>
-                <div style="font-size:0.8rem; color:#666; margin-top:5px;">
-                    (เดิม <span id="oldTwdDisplay"></span>, <span id="percentChange"></span>)
-                </div>
-            </div>
-
-            <div>
-                <h3 style="margin:0 0 15px 0; font-size:1.1rem; color:#444; border-bottom:2px solid #eee; padding-bottom:5px;">📅 ตารางกินยา (แนะนำ)</h3>
-                <div id="scheduleDetails"></div>
-            </div>
-        </div>
-    </div>
-    <div class="disclaimer">
-        ⚠️ คำเตือน: โปรแกรมนี้เป็นเครื่องมือช่วยคำนวณเบื้องต้นเท่านั้น 
-        การปรับยาจริงต้องผ่านการพิจารณาจากแพทย์หรือเภสัชกรผู้เชี่ยวชาญ 
-        โดยคำนึงถึงสภาวะผู้ป่วยแต่ละราย
-    </div>
-</div>
-
-<script>
-    function parseInput(id) {
-        const val = document.getElementById(id).value;
-        if (!val) return NaN;
-        return parseFloat(val.replace(',', '.').trim());
-    }
-
-    // --- 1. ส่วน Guideline (Logic เดิม) ---
-    function checkGuideline() {
-        document.getElementById('resultArea').style.display = 'none';
-        document.getElementById('selectionArea').style.display = 'none';
-        document.getElementById('planSection').style.display = 'block';
-
-        const inr = parseInput('inrVal');
-        const oldTwd = parseInput('currentTwd');
-        
-        if (isNaN(inr) || isNaN(oldTwd)) {
-            alert("กรุณากรอกตัวเลขให้ครบถ้วน");
-            return;
-        }
-
-        if (inr < 1.5) showSelection("INR < 1.5 (เพิ่มยา 10-20%)", [10, 20], "increase");
-        else if (inr >= 1.5 && inr <= 1.99) showSelection("INR 1.5-1.9 (เพิ่มยา 5-10%)", [5, 10], "increase");
-        else if (inr >= 2.0 && inr <= 3.0) calculateFinal(0, "alert-ok", "INR อยู่ในเกณฑ์ (2.0-3.0)", "คงขนาดยาเดิม");
-        else if (inr >= 3.1 && inr <= 3.99) showSelection("INR 3.1-3.9 (ลดยา 5-10%)", [-5, -10], "decrease");
-        else if (inr >= 4.0 && inr <= 4.99) calculateFinal(-10, "alert-high", "INR 4.0-4.9", "หยุดยา 1 วัน แล้วลด 10%");
-        else if (inr >= 5.0) {
-            document.getElementById('resultArea').style.display = 'block';
-            document.getElementById('statusAlert').className = "alert alert-high";
-            document.getElementById('statusAlert').innerHTML = "INR ≥ 5.0 อันตราย! กรุณาหยุดยาและปรึกษาแพทย์";
-            document.getElementById('planSection').style.display = 'none';
-        }
-    }
-
-    function showSelection(text, percents, type) {
-        const area = document.getElementById('selectionArea');
-        document.getElementById('selectionText').innerText = text;
-        const btns = document.getElementById('selectionButtons');
-        btns.innerHTML = '';
-        percents.forEach(pct => {
-            const btn = document.createElement('button');
-            btn.className = `btn-option ${type}`;
-            btn.innerText = (pct > 0 ? "+" : "") + pct + "%";
-            btn.onclick = () => calculateFinal(pct, type === "increase" ? "alert-low" : "alert-high", type === "increase" ? "INR ต่ำ" : "INR สูง", `ปรับ ${pct}%`);
-            btns.appendChild(btn);
-        });
-        area.style.display = 'block';
-    }
-
-    function calculateFinal(percent, statusClass, statusText, actionText) {
-        document.getElementById('selectionArea').style.display = 'none';
-        const oldTwd = parseInput('currentTwd');
-        
-        let calcTwd = oldTwd * (1 + (percent / 100));
-        let newTwd = Math.round(calcTwd * 2) / 2; // Round to .0 or .5
-
-        const resultArea = document.getElementById('resultArea');
-        resultArea.style.display = 'block';
-        document.getElementById('statusAlert').className = "alert " + statusClass;
-        document.getElementById('statusAlert').innerText = statusText;
-        document.getElementById('adjustmentText').innerText = actionText;
-        document.getElementById('newTwdVal').innerText = newTwd.toFixed(1);
-        document.getElementById('oldTwdDisplay').innerText = oldTwd;
-        document.getElementById('percentChange').innerText = percent === 0 ? "คงเดิม" : (percent > 0 ? "+" : "") + percent + "%";
-
-        // คำนวณตารางยา
-        const scheduleHtml = calculateStrictSchedule(newTwd);
-        document.getElementById('scheduleDetails').innerHTML = scheduleHtml;
-        resultArea.scrollIntoView({ behavior: 'smooth' });
-    }
-
-    // --- 2. ส่วนคำนวณตารางยา (เขียนใหม่ทั้งหมด) ---
-    
-    // รายการขนาดยาที่เป็นไปได้จากยา 2, 3, 5 mg (รวมหักครึ่ง)
-    const VALID_DOSES = [
-        0, 
-        1.0,  // 2mg หักครึ่ง
-        1.5,  // 3mg หักครึ่ง
-        2.0,  // 2mg 1 เม็ด
-        2.5,  // 5mg หักครึ่ง
-        3.0,  // 3mg 1 เม็ด
-        4.0,  // 2mg 2 เม็ด
-        5.0,  // 5mg 1 เม็ด
-        6.0,  // 3mg 2 เม็ด
-        7.5,  // 5mg 1.5 เม็ด
-        10.0  // 5mg 2 เม็ด
-    ];
-
-    function calculateStrictSchedule(targetTwd) {
-        // รูปแบบที่เป็นไปได้ (เน้นแค่นี้เพื่อให้ไม่เกิน 2 รูปแบบ)
-        // 7+0 (กินเหมือนกันทุกวัน)
-        // 6+1 (จ-ส, อา)
-        // 5+2 (จ-ศ, ส-อา)
-        // 4+3 (จ-พฤ, ศ-อา)
-        const patterns = [
-            { dA: 7, dB: 0, labelA: "ทุกวัน (จันทร์ - อาทิตย์)", labelB: "" },
-            { dA: 6, dB: 1, labelA: "วัน จันทร์ - เสาร์", labelB: "วัน อาทิตย์" },
-            { dA: 5, dB: 2, labelA: "วัน จันทร์ - ศุกร์", labelB: "วัน เสาร์ - อาทิตย์" },
-            { dA: 4, dB: 3, labelA: "วัน จันทร์ - พฤหัสฯ", labelB: "วัน ศุกร์ - อาทิตย์" }
-        ];
-
-        // วนลูปหา Dose A และ Dose B ที่เหมาะสม
-        for (let p of patterns) {
-            for (let doseA of VALID_DOSES) {
-                // คำนวณหา doseB ที่ต้องใช้
-                let remainder = targetTwd - (doseA * p.dA);
-                
-                // กรณี 7 วันเหมือนกัน
-                if (p.dB === 0) {
-                    if (remainder === 0) {
-                        return renderCard(doseA, p.dA, p.labelA) + renderTotal(targetTwd);
-                    }
-                } else {
-                    // กรณีมี 2 ช่วงเวลา
-                    let doseB = remainder / p.dB;
-                    // ตรวจสอบว่า doseB มีอยู่ในรายการยาที่เป็นไปได้หรือไม่ (ป้องกันทศนิยมเพี้ยนด้วย Math.round)
-                    // เช่น 1.00000001 -> 1.0
-                    let doseBRounded = Math.round(doseB * 100) / 100;
-                    
-                    if (VALID_DOSES.includes(doseBRounded)) {
-                        return renderCard(doseA, p.dA, p.labelA) + 
-                               renderCard(doseBRounded, p.dB, p.labelB) + 
-                               renderTotal(targetTwd);
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Sarabun', 'sans-serif'] },
+                    colors: {
+                        brand: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1' }
                     }
                 }
             }
         }
+    </script>
+    <style>
+        body { background-color: #f8fafc; }
+        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .pill-card { transition: all 0.3s ease; }
+        .pill-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 text-slate-700">
 
-        return `<div style="color:red; text-align:center;">
-            ไม่สามารถจัดยาให้ลงตัวเป๊ะได้ (TWD: ${targetTwd})<br>
-            เนื่องจากต้องใช้รูปแบบยาไม่เกิน 2 แบบ<br>
-            ลองปรับ TWD เล็กน้อย (เช่น ±0.5 mg)
-        </div>`;
-    }
-
-    // ฟังก์ชันแปลงตัวเลขขนาดยา เป็นคำพูด (เช่น 2mg 2 เม็ด)
-    function getPillDescription(dose) {
-        if (dose === 0) return { title: "หยุดยา (Off)", detail: "ไม่ต้องทานยา" };
+    <div class="w-full max-w-2xl bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
         
-        // กฎการเลือกเม็ดยา (Priority ตามความง่าย)
-        if (dose === 1.0) return { title: "1 mg", detail: "Warfarin (2 mg) หักครึ่งเม็ด (1/2)" };
-        if (dose === 1.5) return { title: "1.5 mg", detail: "Warfarin (3 mg) หักครึ่งเม็ด (1/2)" };
-        if (dose === 2.0) return { title: "2 mg", detail: "Warfarin (2 mg) 1 เม็ด" };
-        if (dose === 2.5) return { title: "2.5 mg", detail: "Warfarin (5 mg) หักครึ่งเม็ด (1/2)" };
-        if (dose === 3.0) return { title: "3 mg", detail: "Warfarin (3 mg) 1 เม็ด" };
-        if (dose === 4.0) return { title: "4 mg", detail: "Warfarin (2 mg) 2 เม็ด" };
-        if (dose === 5.0) return { title: "5 mg", detail: "Warfarin (5 mg) 1 เม็ด" };
-        if (dose === 6.0) return { title: "6 mg", detail: "Warfarin (3 mg) 2 เม็ด" };
-        if (dose === 7.5) return { title: "7.5 mg", detail: "Warfarin (5 mg) 1 เม็ดครึ่ง (1 ½)" };
-        if (dose === 10.0) return { title: "10 mg", detail: "Warfarin (5 mg) 2 เม็ด" };
+        <div class="bg-gradient-to-r from-slate-800 to-slate-900 p-8 text-center text-white relative">
+            <div class="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/medical-icons.png')]"></div>
+            <h1 class="text-3xl font-bold relative z-10"><i class="fa-solid fa-heart-pulse text-rose-500 mr-2"></i>Warfarin Calculator</h1>
+            <p class="text-slate-300 text-sm mt-1 relative z-10">คำนวณและจัดกลุ่มตารางยาอัตโนมัติ</p>
+        </div>
 
-        return { title: `${dose} mg`, detail: `Warfarin (${dose} mg)` };
-    }
+        <div class="p-6 md:p-8 space-y-6">
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Total Weekly Dose (TWD)</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-scale-balanced absolute left-4 top-3.5 text-slate-400"></i>
+                        <input type="number" id="twd" step="0.5" placeholder="mg/week" 
+                            class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none transition font-bold text-lg text-slate-800">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Current INR</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-droplet absolute left-4 top-3.5 text-rose-400"></i>
+                        <input type="number" id="inr" step="0.1" placeholder="ค่า INR" 
+                            class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none transition font-bold text-lg text-slate-800">
+                    </div>
+                </div>
+            </div>
 
-    function renderCard(dose, days, label) {
-        const info = getPillDescription(dose);
-        const total = dose * days;
-        return `
-        <div class="pill-card">
-            <div class="pill-header">${info.detail}</div>
-            <div class="pill-days">กิน: ${label}</div>
-            <div style="float:right; color:#888; font-size:0.9em;">(รวม ${total} mg)</div>
-        </div>`;
-    }
+            <button onclick="calculateDose()" 
+                class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-brand-200 transition transform active:scale-95 text-lg">
+                คำนวณผลลัพธ์
+            </button>
 
-    function renderTotal(twd) {
-        return `<div style="text-align:center; margin-top:10px; font-weight:bold; color:#0056b3;">รวมทั้งสัปดาห์: ${twd} mg</div>`;
-    }
+            <div id="resultSection" class="hidden space-y-6 fade-in pt-4 border-t border-slate-100">
+                
+                <div id="statusCard" class="p-5 rounded-xl border-l-4 flex items-start gap-4 shadow-sm bg-white">
+                    </div>
 
-</script>
+                <div id="adjContainer" class="hidden text-center">
+                    <p class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-3">ปรับขนาดยาตามเปอร์เซ็นต์</p>
+                    <div id="adjButtons" class="flex flex-wrap justify-center gap-3"></div>
+                </div>
 
+                <div id="newDoseDisplay" class="hidden"></div>
+
+                <div id="regimenSection"></div>
+
+                <button onclick="resetCalculator()" class="w-full py-3 text-slate-400 hover:text-slate-600 font-medium transition text-sm">
+                    <i class="fa-solid fa-refresh mr-1"></i> ล้างข้อมูลและเริ่มใหม่
+                </button>
+            </div>
+
+            <div class="bg-amber-50 text-amber-800 p-4 rounded-lg text-xs border border-amber-100 flex gap-3">
+                <i class="fa-solid fa-circle-exclamation text-lg mt-0.5"></i>
+                <div>
+                    <strong>Clinical Note:</strong> ถ้าพบ Major bleeding with any INR ให้ Vitamin K 10 mg IV plus FFP และ Repeat Vitamin K every 12 hours if needed.
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        let currentTWD = 0;
+        let currentINR = 0;
+
+        // --- Core Logic ---
+
+        function calculateDose() {
+            const twdInput = document.getElementById('twd').value;
+            const inrInput = document.getElementById('inr').value;
+
+            if (!twdInput || !inrInput) return alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+
+            currentTWD = parseFloat(twdInput);
+            currentINR = parseFloat(inrInput);
+
+            document.getElementById('resultSection').classList.remove('hidden');
+            setTimeout(() => document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' }), 100);
+
+            analyzeINR();
+        }
+
+        function analyzeINR() {
+            const statusCard = document.getElementById('statusCard');
+            const adjContainer = document.getElementById('adjContainer');
+            const newDoseDisplay = document.getElementById('newDoseDisplay');
+            
+            // Reset
+            newDoseDisplay.classList.add('hidden');
+            document.getElementById('regimenSection').innerHTML = '';
+            adjContainer.classList.add('hidden');
+
+            let config = { color: '', icon: '', title: '', text: '', btns: [], type: '' };
+
+            if (currentINR < 1.5) {
+                config = { color: 'yellow', icon: 'fa-arrow-trend-down', title: 'ค่า INR ต่ำกว่าเกณฑ์มาก', text: 'ต้องเพิ่มขนาดยา', btns: [10, 15, 20], type: 'increase' };
+            } else if (currentINR >= 1.5 && currentINR <= 1.9) {
+                config = { color: 'yellow', icon: 'fa-arrow-trend-down', title: 'ค่า INR ค่อนข้างต่ำ', text: 'ควรปรับเพิ่มขนาดยา', btns: [5, 7.5, 10], type: 'increase' };
+            } else if (currentINR >= 2.0 && currentINR <= 3.0) {
+                config = { color: 'green', icon: 'fa-check-circle', title: 'Excellent! INR ตามเป้าหมาย', text: 'ให้คงขนาดยาเดิมต่อไป', btns: [], type: 'keep' };
+                // Auto calculate
+                calculateRegimen(currentTWD);
+                renderNewTWD(currentTWD);
+            } else if (currentINR >= 3.1 && currentINR <= 3.9) {
+                config = { color: 'orange', icon: 'fa-arrow-trend-up', title: 'ค่า INR สูงกว่าเกณฑ์', text: 'ต้องลดขนาดยา', btns: [5, 7.5, 10], type: 'decrease' };
+            } else if (currentINR >= 4.0 && currentINR <= 4.9) {
+                config = { color: 'red', icon: 'fa-hand-paper', title: 'ค่า INR สูงผิดปกติ', text: 'Hold ยาก่อน และลดขนาดยา', btns: [7.5, 10, 15], type: 'decrease' };
+            } else if (currentINR >= 5.0 && currentINR <= 8.9) {
+                config = { color: 'red', icon: 'fa-ban', title: 'อันตราย: INR สูงมาก', text: 'Hold ยาก่อน 1-2 dose, ลดยา, พิจารณา Vit K', btns: [10, 15, 20], type: 'decrease' };
+            } else {
+                config = { color: 'red', icon: 'fa-skull-crossbones', title: 'CRITICAL', text: 'Hold ยา + พิจารณา Vitamin K ทันที', btns: [], type: 'critical' };
+            }
+
+            renderStatus(config);
+            if (config.btns.length > 0) renderButtons(config.btns, config.type);
+        }
+
+        function renderStatus({ color, icon, title, text }) {
+            const colors = {
+                yellow: 'bg-yellow-50 border-yellow-400 text-yellow-800',
+                green: 'bg-green-50 border-green-500 text-green-800',
+                orange: 'bg-orange-50 border-orange-500 text-orange-800',
+                red: 'bg-red-50 border-red-600 text-red-800'
+            };
+            const theme = colors[color] || colors.red;
+            
+            document.getElementById('statusCard').className = `p-5 rounded-xl border-l-4 flex items-start gap-4 shadow-sm ${theme}`;
+            document.getElementById('statusCard').innerHTML = `
+                <div class="mt-1 text-2xl"><i class="fa-solid ${icon}"></i></div>
+                <div>
+                    <h3 class="font-bold text-lg">${title}</h3>
+                    <p class="opacity-90 text-sm">${text}</p>
+                </div>
+            `;
+        }
+
+        function renderButtons(pcts, type) {
+            const container = document.getElementById('adjButtons');
+            document.getElementById('adjContainer').classList.remove('hidden');
+            
+            const isInc = type === 'increase';
+            const colorClass = isInc 
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-500 hover:text-white' 
+                : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-500 hover:text-white';
+            const icon = isInc ? '+' : '-';
+
+            container.innerHTML = pcts.map(p => `
+                <button onclick="applyAdjustment(${p}, '${type}')" 
+                    class="flex-1 min-w-[80px] py-3 px-4 rounded-xl border font-bold text-lg transition ${colorClass}">
+                    ${icon}${p}%
+                </button>
+            `).join('');
+        }
+
+        function applyAdjustment(pct, type) {
+            let val = type === 'increase' 
+                ? currentTWD * (1 + pct/100) 
+                : currentTWD * (1 - pct/100);
+            
+            // Round logic: Nearest 0.5
+            val = Math.round(val * 2) / 2;
+            
+            renderNewTWD(val);
+            calculateRegimen(val);
+        }
+
+        function renderNewTWD(val) {
+            const el = document.getElementById('newDoseDisplay');
+            el.classList.remove('hidden');
+            el.innerHTML = `
+                <div class="bg-slate-800 text-white p-6 rounded-2xl text-center shadow-lg mb-6 relative overflow-hidden">
+                    <div class="relative z-10">
+                        <p class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Target Total Weekly Dose</p>
+                        <h2 class="text-4xl font-bold text-brand-400">${val.toFixed(1)} <span class="text-xl text-white">mg/week</span></h2>
+                    </div>
+                    <i class="fa-solid fa-pills absolute -right-6 -bottom-6 text-8xl text-white opacity-5"></i>
+                </div>
+            `;
+        }
+
+        // --- Regimen Algorithm ---
+
+        function calculateRegimen(targetTWD) {
+            const available = [
+                { strength: 5, label: '5 mg' },
+                { strength: 3, label: '3 mg' },
+                { strength: 2, label: '2 mg' }
+            ];
+
+            // 1. Find best math combination
+            let bestSolution = null;
+            let bestSD = Infinity;
+
+            for (let s1 of available) {
+                for (let t1 of [0, 0.5, 1, 1.5, 2]) { // Tabs 1
+                    for (let s2 of available) {
+                        for (let t2 of [0, 0.5, 1, 1.5, 2]) { // Tabs 2
+                            
+                            const dose1 = s1.strength * t1;
+                            const dose2 = s2.strength * t2;
+
+                            // Loop Days Split (0-7)
+                            for (let d1 = 0; d1 <= 7; d1++) {
+                                const d2 = 7 - d1;
+                                const total = (dose1 * d1) + (dose2 * d2);
+
+                                // Check TWD match
+                                if (Math.abs(total - targetTWD) < 0.01) {
+                                    
+                                    let patterns = [];
+                                    if (d1 > 0) patterns.push({ dose: dose1, days: d1, strength: s1, tabs: t1 });
+                                    if (d2 > 0) patterns.push({ dose: dose2, days: d2, strength: s2, tabs: t2 });
+
+                                    // Merge if dose is same
+                                    if (patterns.length === 2 && patterns[0].dose === patterns[1].dose) {
+                                        patterns = [{ ...patterns[0], days: 7 }];
+                                    }
+
+                                    if (patterns.length > 2) continue;
+
+                                    // Calc SD
+                                    let daily = [];
+                                    patterns.forEach(p => { for(let k=0; k<p.days; k++) daily.push(p.dose); });
+                                    
+                                    const mean = daily.reduce((a,b)=>a+b,0)/7;
+                                    const variance = daily.reduce((a,b)=>a+Math.pow(b-mean,2),0)/7;
+                                    const sd = Math.sqrt(variance);
+
+                                    if (sd < 3 && sd < bestSD) {
+                                        bestSD = sd;
+                                        bestSolution = { patterns, sd };
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            renderRegimenCards(bestSolution, targetTWD);
+        }
+
+        // --- Render UI (The "Grouped" Display) ---
+
+        function renderRegimenCards(solution, targetTWD) {
+            const container = document.getElementById('regimenSection');
+            
+            if (!solution) {
+                container.innerHTML = `
+                    <div class="text-center p-8 bg-slate-50 rounded-xl text-slate-500">
+                        <i class="fa-solid fa-file-circle-xmark text-4xl mb-2 text-slate-300"></i>
+                        <p>ไม่สามารถคำนวณสูตรยาที่ลงตัวได้ (SD < 3)</p>
+                        <p class="text-sm">กรุณาปรึกษาแพทย์เพื่อปรับ TWD</p>
+                    </div>`;
+                return;
+            }
+
+            const dayNames = ['จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์', 'อาทิตย์'];
+            let html = `<div class="space-y-3">`;
+            let currentDayIndex = 0;
+
+            solution.patterns.forEach((p, index) => {
+                // Calculate Day Range String
+                const startDay = dayNames[currentDayIndex];
+                const endDay = dayNames[currentDayIndex + p.days - 1];
+                let dayLabel = (p.days === 1) ? startDay : `${startDay} - ${endDay}`;
+                
+                // Special case for 7 days
+                if (p.days === 7) dayLabel = "กินทุกวัน (จันทร์ - อาทิตย์)";
+                
+                // Calculate Total for this row (Calculation method)
+                const rowTotal = p.dose * p.days;
+
+                // Generate Pill Text
+                let pillText = "";
+                let subText = "";
+                
+                if (p.dose === 0) {
+                    pillText = `<span class="text-slate-400">หยุดยา</span>`;
+                    subText = `
+                        <div class="font-bold text-slate-400 text-lg">0 mg/วัน</div>
+                        <div class="text-xs text-slate-300 mt-1">0 mg × ${p.days} วัน = 0 mg</div>
+                    `;
+                } else {
+                    const tabStr = p.tabs === 0.5 ? 'ครึ่งเม็ด' : p.tabs === 1.5 ? '1 เม็ดครึ่ง' : p.tabs + ' เม็ด';
+                    
+                    // Design: Main Pill Text
+                    pillText = `
+                        <span class="font-bold text-slate-700 text-lg">
+                            ${p.strength.label} <span class="text-brand-600">(${tabStr})</span>
+                        </span>`;
+                        
+                    // Design: Dose sum & Calc (NEW: Added small calculation text)
+                    subText = `
+                        <div class="font-bold text-slate-500 text-lg">(${p.dose} mg/วัน)</div>
+                        <div class="text-xs text-slate-400 mt-1 font-medium bg-slate-100 inline-block px-2 py-0.5 rounded">
+                            ${p.dose} mg × ${p.days} วัน = ${rowTotal} mg
+                        </div>
+                    `;
+                }
+
+                // Card Theme
+                const cardBg = index === 0 ? 'bg-white border-brand-200 shadow-brand-100' : 'bg-slate-50 border-slate-200';
+                const dayBadgeColor = index === 0 ? 'bg-brand-100 text-brand-700' : 'bg-slate-200 text-slate-600';
+
+                html += `
+                    <div class="pill-card border rounded-2xl p-4 flex justify-between items-center shadow-sm ${cardBg}">
+                        <div>
+                            <div class="inline-block px-3 py-1 rounded-full text-xs font-bold mb-2 ${dayBadgeColor}">
+                                ${dayLabel}
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-capsules text-slate-300"></i>
+                                ${pillText}
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            ${subText}
+                        </div>
+                    </div>
+                `;
+
+                currentDayIndex += p.days;
+            });
+
+            html += `</div>`;
+            
+            // Add SD Badge
+            html += `
+                <div class="text-right mt-2 flex justify-end items-center gap-2">
+                     <span class="text-xs text-slate-300">Total Check: ${(Math.round(solution.patterns.reduce((a,b)=>a+(b.dose*b.days),0)*2)/2).toFixed(1)} mg</span>
+                     <span class="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded">SD: ${solution.sd.toFixed(2)}</span>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        function resetCalculator() {
+            document.getElementById('twd').value = '';
+            document.getElementById('inr').value = '';
+            document.getElementById('resultSection').classList.add('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    </script>
 </body>
 </html>
