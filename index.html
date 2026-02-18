@@ -171,8 +171,14 @@
         let savedHistory = JSON.parse(localStorage.getItem('warfarin_history')) || [];
         renderHistoryTable();
 
+        // ---------------------------------------------------------
+        // ใส่ URL ที่ได้จากขั้นตอนที่ 3 ตรงนี้
+        // ---------------------------------------------------------
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyAFM88EQvA5bfRD9U48goU4MnZ1OzR6RqPfppNfzPRWPMlDpzKFdGNNEfnA8TskSIMTw/exec"; 
+        // ---------------------------------------------------------
+
         function saveDataToHistory() {
-            const name = document.getElementById('patientName').value.trim(); // Get Name
+            const name = document.getElementById('patientName').value.trim();
             const note = document.getElementById('userNote').value.trim();
             
             if (!name) {
@@ -183,9 +189,10 @@
 
             const now = new Date();
             const dateStr = now.toLocaleString('th-TH');
-
+            
+            // ข้อมูลที่จะบันทึก
             const record = {
-                name: name, // Store Name
+                name: name,
                 date: dateStr,
                 inr: currentINR,
                 twd_old: currentTWD,
@@ -194,15 +201,42 @@
                 note: note
             };
 
+            // 1. บันทึกลง LocalStorage (ในเครื่อง) เหมือนเดิม
             savedHistory.unshift(record); 
             localStorage.setItem('warfarin_history', JSON.stringify(savedHistory));
-
-            alert("บันทึกข้อมูลเรียบร้อยแล้ว!");
-            // Optional: Clear note but keep name? or clear both? Let's clear note only for workflow ease, user can change name if needed.
-            document.getElementById('userNote').value = ""; 
             renderHistoryTable();
-            document.querySelector('.fa-clock-rotate-left').scrollIntoView({ behavior: 'smooth' });
+
+            // 2. ส่งข้อมูลไป Google Sheets (Cloud)
+            // เปลี่ยนปุ่มเป็นสถานะ "กำลังบันทึก..."
+            const saveBtn = document.querySelector('button[onclick="saveDataToHistory()"]');
+            const originalText = saveBtn.innerHTML;
+            saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังส่งข้อมูลเข้า Cloud...';
+            saveBtn.disabled = true;
+
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors', // สำคัญมากสำหรับการส่งข้ามโดเมนแบบง่าย
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(record)
+            })
+            .then(() => {
+                alert("✅ บันทึกข้อมูลลง Google Sheets เรียบร้อยแล้ว!");
+                // Reset UI
+                document.getElementById('userNote').value = ""; 
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
+                document.querySelector('.fa-clock-rotate-left').scrollIntoView({ behavior: 'smooth' });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("⚠️ บันทึกลงเครื่องสำเร็จ แต่ส่งไป Google Sheet ไม่สำเร็จ (เช็คอินเทอร์เน็ต)");
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
+            });
         }
+
 
         function renderHistoryTable() {
             const tbody = document.getElementById('historyTableBody');
