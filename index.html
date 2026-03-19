@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Warfarin Smart Calculator Pro (Patient Name)</title>
+    <title>Warfarin Smart Calculator Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -27,6 +27,8 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .pill-card { transition: all 0.3s ease; }
         .pill-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        /* ซ่อนลูกศร Dropdown ดั้งเดิมเพื่อใช้ Custom Icon */
+        select { -webkit-appearance: none; -moz-appearance: none; appearance: none; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center p-4 text-slate-700">
@@ -143,12 +145,14 @@
                     <thead class="text-xs text-slate-700 uppercase bg-slate-100 border-b border-slate-200">
                         <tr>
                             <th class="px-4 py-3">วัน/เวลา</th>
-                            <th class="px-4 py-3 text-brand-700">ชื่อผู้ป่วย</th> <th class="px-4 py-3">INR</th>
+                            <th class="px-4 py-3 text-brand-700">ชื่อผู้ป่วย</th>
+                            <th class="px-4 py-3">INR</th>
                             <th class="px-4 py-3">TWD (เดิม)</th>
                             <th class="px-4 py-3">TWD (ใหม่)</th>
                             <th class="px-4 py-3">สถานะ/คำแนะนำ</th>
                             <th class="px-4 py-3">Note</th>
-                            <th class="px-4 py-3 text-center">จัดการ</th> </tr>
+                            <th class="px-4 py-3 text-center">จัดการ</th>
+                        </tr>
                     </thead>
                     <tbody id="historyTableBody">
                         </tbody>
@@ -171,12 +175,6 @@
         let savedHistory = JSON.parse(localStorage.getItem('warfarin_history')) || [];
         renderHistoryTable();
 
-        // ---------------------------------------------------------
-        // ใส่ URL ที่ได้จากขั้นตอนที่ 3 ตรงนี้
-        // ---------------------------------------------------------
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyAFM88EQvA5bfRD9U48goU4MnZ1OzR6RqPfppNfzPRWPMlDpzKFdGNNEfnA8TskSIMTw/exec"; 
-        // ---------------------------------------------------------
-
         function saveDataToHistory() {
             const name = document.getElementById('patientName').value.trim();
             const note = document.getElementById('userNote').value.trim();
@@ -189,8 +187,7 @@
 
             const now = new Date();
             const dateStr = now.toLocaleString('th-TH');
-            
-            // ข้อมูลที่จะบันทึก
+
             const record = {
                 name: name,
                 date: dateStr,
@@ -201,42 +198,14 @@
                 note: note
             };
 
-            // 1. บันทึกลง LocalStorage (ในเครื่อง) เหมือนเดิม
             savedHistory.unshift(record); 
             localStorage.setItem('warfarin_history', JSON.stringify(savedHistory));
+
+            alert("บันทึกข้อมูลเรียบร้อยแล้ว!");
+            document.getElementById('userNote').value = ""; 
             renderHistoryTable();
-
-            // 2. ส่งข้อมูลไป Google Sheets (Cloud)
-            // เปลี่ยนปุ่มเป็นสถานะ "กำลังบันทึก..."
-            const saveBtn = document.querySelector('button[onclick="saveDataToHistory()"]');
-            const originalText = saveBtn.innerHTML;
-            saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังส่งข้อมูลเข้า Cloud...';
-            saveBtn.disabled = true;
-
-            fetch(GOOGLE_SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors', // สำคัญมากสำหรับการส่งข้ามโดเมนแบบง่าย
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(record)
-            })
-            .then(() => {
-                alert("✅ บันทึกข้อมูลลง Google Sheets เรียบร้อยแล้ว!");
-                // Reset UI
-                document.getElementById('userNote').value = ""; 
-                saveBtn.innerHTML = originalText;
-                saveBtn.disabled = false;
-                document.querySelector('.fa-clock-rotate-left').scrollIntoView({ behavior: 'smooth' });
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert("⚠️ บันทึกลงเครื่องสำเร็จ แต่ส่งไป Google Sheet ไม่สำเร็จ (เช็คอินเทอร์เน็ต)");
-                saveBtn.innerHTML = originalText;
-                saveBtn.disabled = false;
-            });
+            document.querySelector('.fa-clock-rotate-left').scrollIntoView({ behavior: 'smooth' });
         }
-
 
         function renderHistoryTable() {
             const tbody = document.getElementById('historyTableBody');
@@ -272,12 +241,11 @@
             });
         }
 
-        // --- NEW: Delete Single Item Function ---
         function deleteSingleHistory(index) {
             if(confirm('คุณต้องการลบรายการนี้ใช่หรือไม่?')) {
-                savedHistory.splice(index, 1); // Remove item at index
-                localStorage.setItem('warfarin_history', JSON.stringify(savedHistory)); // Update Storage
-                renderHistoryTable(); // Re-render
+                savedHistory.splice(index, 1);
+                localStorage.setItem('warfarin_history', JSON.stringify(savedHistory));
+                renderHistoryTable();
             }
         }
 
@@ -290,7 +258,6 @@
         }
 
         // --- Backup / Restore / Export ---
-
         function backupData() {
             if (savedHistory.length === 0) return alert("ไม่มีข้อมูลให้สำรอง");
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(savedHistory));
@@ -327,7 +294,7 @@
             if (savedHistory.length === 0) return alert("ไม่มีข้อมูลในประวัติ");
             const excelData = savedHistory.map(item => ({
                 "วันที่บันทึก": item.date,
-                "ชื่อผู้ป่วย": item.name || '-', // Add to Excel
+                "ชื่อผู้ป่วย": item.name || '-',
                 "ค่า INR": item.inr,
                 "TWD เดิม (mg)": item.twd_old,
                 "TWD ใหม่ (mg)": item.twd_new,
@@ -340,7 +307,7 @@
             XLSX.writeFile(wb, `Warfarin_Patient_Data_${new Date().toISOString().slice(0,10)}.xlsx`);
         }
 
-        // --- Calculation Logic (No Changes) ---
+        // --- Calculation Logic ---
 
         function calculateDose() {
             const twdInput = document.getElementById('twd').value;
@@ -370,8 +337,8 @@
                 config = { color: 'yellow', icon: 'fa-arrow-trend-down', title: 'ค่า INR ค่อนข้างต่ำ', text: 'ควรปรับเพิ่มขนาดยา', btns: [5, 7.5, 10], type: 'increase' };
             } else if (currentINR >= 2.0 && currentINR <= 3.0) {
                 config = { color: 'green', icon: 'fa-check-circle', title: 'Excellent! INR ตามเป้าหมาย', text: 'ให้คงขนาดยาเดิมต่อไป', btns: [], type: 'keep' };
-                calculateRegimen(currentTWD);
                 renderNewTWD(currentTWD);
+                calculateRegimen(currentTWD);
             } else if (currentINR >= 3.1 && currentINR <= 3.9) {
                 config = { color: 'orange', icon: 'fa-arrow-trend-up', title: 'ค่า INR สูงกว่าเกณฑ์', text: 'ต้องลดขนาดยา', btns: [5, 7.5, 10], type: 'decrease' };
             } else if (currentINR >= 4.0 && currentINR <= 4.9) {
@@ -411,25 +378,87 @@
         function applyAdjustment(pct, type) {
             let val = type === 'increase' ? currentTWD * (1 + pct/100) : currentTWD * (1 - pct/100);
             val = Math.round(val * 2) / 2;
-            currentCalculatedTWD = val;
             renderNewTWD(val);
             calculateRegimen(val);
         }
 
+        // --- NEW & UPDATED: Interactive Dropdown & Percentage Display ---
         function renderNewTWD(val) {
+            currentCalculatedTWD = val;
             const el = document.getElementById('newDoseDisplay');
             el.classList.remove('hidden');
+            
+            // สร้างตัวเลือกสำหรับ Dropdown (+/- ทีละ 0.5 mg จากค่าที่ระบบแนะนำ 6 Step)
+            let optionsHtml = "";
+            for (let i = -6; i <= 6; i++) {
+                let optVal = val + (i * 0.5);
+                if (optVal <= 0 && i < 0) continue; // ข้ามค่าติดลบ หรือ 0 (ในกรณีลดลง)
+                
+                let selected = (i === 0) ? "selected" : "";
+                let label = optVal.toFixed(1) + " mg/week";
+                if (i === 0) label += " (ค่าที่คำนวณได้)";
+                
+                optionsHtml += `<option value="${optVal}" ${selected}>${label}</option>`;
+            }
+
             el.innerHTML = `
                 <div class="bg-slate-800 text-white p-6 rounded-2xl text-center shadow-lg mb-6 relative overflow-hidden">
-                    <div class="relative z-10">
-                        <p class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Target Total Weekly Dose</p>
-                        <h2 class="text-4xl font-bold text-brand-400">${val.toFixed(1)} <span class="text-xl text-white">mg/week</span></h2>
+                    <div class="relative z-10 flex flex-col items-center">
+                        <p class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Target Total Weekly Dose (เลือกปรับแต่งได้)</p>
+                        
+                        <div class="relative inline-block mb-4">
+                            <select id="twdSelector" onchange="onManualTwdChange(this.value)" 
+                                class="appearance-none text-2xl md:text-3xl font-bold text-brand-700 bg-white border-4 border-slate-700 hover:border-brand-500 rounded-xl pl-4 md:pl-6 pr-10 md:pr-12 py-2 outline-none cursor-pointer transition text-center shadow-inner w-full min-w-[240px]">
+                                ${optionsHtml}
+                            </select>
+                            <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none text-xl"></i>
+                        </div>
+
+                        <div id="percentageChangeDisplay">
+                            </div>
                     </div>
                     <i class="fa-solid fa-pills absolute -right-6 -bottom-6 text-8xl text-white opacity-5"></i>
                 </div>
             `;
+            
+            updatePercentageUI(val);
         }
 
+        function onManualTwdChange(newVal) {
+            let val = parseFloat(newVal);
+            currentCalculatedTWD = val; // Update global state for saving
+            updatePercentageUI(val);
+            calculateRegimen(val); // Re-calculate drug table
+        }
+
+        function updatePercentageUI(val) {
+            let pctChange = 0;
+            if (currentTWD > 0) {
+                pctChange = ((val - currentTWD) / currentTWD) * 100;
+            }
+            
+            let pctText = "";
+            let pctClass = "text-sm font-medium px-4 py-1.5 rounded-full inline-flex items-center gap-1 ";
+            
+            if (pctChange > 0) {
+                pctText = `ปรับเพิ่มขึ้น +${pctChange.toFixed(1)}%`;
+                pctClass += "bg-rose-500/20 text-rose-300";
+            } else if (pctChange < 0) {
+                pctText = `ปรับลดลง -${Math.abs(pctChange).toFixed(1)}%`;
+                pctClass += "bg-emerald-500/20 text-emerald-300";
+            } else {
+                pctText = "ไม่เปลี่ยนแปลง (0%)";
+                pctClass += "bg-slate-700 text-slate-300";
+            }
+
+            const pctEl = document.getElementById('percentageChangeDisplay');
+            if (pctEl) {
+                pctEl.className = pctClass;
+                pctEl.innerHTML = `<i class="fa-solid fa-calculator"></i> เทียบกับขนาดยาเดิม: ${pctText}`;
+            }
+        }
+
+        // --- Regimen Algorithm (No Changes) ---
         function calculateRegimen(targetTWD) {
             const available = [{ strength: 5, label: '5 mg' }, { strength: 3, label: '3 mg' }, { strength: 2, label: '2 mg' }];
             let bestSolution = null;
@@ -470,7 +499,7 @@
         function renderRegimenCards(solution, targetTWD) {
             const container = document.getElementById('regimenSection');
             if (!solution) {
-                container.innerHTML = `<div class="text-center p-8 bg-slate-50 rounded-xl text-slate-500">...ไม่สามารถคำนวณได้...</div>`;
+                container.innerHTML = `<div class="text-center p-8 bg-slate-50 rounded-xl text-slate-500">...ไม่สามารถจัดตารางยาให้สอดคล้องกับตัวเลขนี้ได้ กรุณาปรับ TWD ใหม่...</div>`;
                 return;
             }
             const dayNames = ['จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์', 'อาทิตย์'];
