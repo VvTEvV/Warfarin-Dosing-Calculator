@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Warfarin Smart Calculator Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
-    
+
     <script>
         tailwind.config = {
             theme: {
@@ -22,32 +24,64 @@
         }
     </script>
     <style>
-        body { background-color: #f1f5f9; }
-        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .pill-card { transition: all 0.3s ease; }
-        .pill-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        body {
+            background-color: #f1f5f9;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .pill-card {
+            transition: all 0.3s ease;
+        }
+
+        .pill-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
         /* ซ่อนลูกศร Dropdown ดั้งเดิมเพื่อใช้ Custom Icon */
-        select { -webkit-appearance: none; -moz-appearance: none; appearance: none; }
+        select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
     </style>
 </head>
+
 <body class="min-h-screen flex flex-col items-center p-4 text-slate-700">
 
     <div class="w-full max-w-3xl bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden mb-8">
-        
+
         <div class="bg-gradient-to-r from-slate-800 to-slate-900 p-8 text-center text-white relative">
-            <div class="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/medical-icons.png')]"></div>
-            <h1 class="text-3xl font-bold relative z-10"><i class="fa-solid fa-heart-pulse text-rose-500 mr-2"></i>Warfarin Calculator</h1>
+            <div
+                class="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/medical-icons.png')]">
+            </div>
+            <h1 class="text-3xl font-bold relative z-10"><i
+                    class="fa-solid fa-heart-pulse text-rose-500 mr-2"></i>Warfarin Calculator</h1>
             <p class="text-slate-300 text-sm mt-1 relative z-10">ระบบคำนวณและฐานข้อมูลผู้ป่วย</p>
         </div>
 
         <div class="p-6 md:p-8 space-y-6">
-            
+
             <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
                 <label class="block text-sm font-bold text-slate-700 mb-2">ชื่อ-นามสกุล ผู้ป่วย (Patient Name)</label>
                 <div class="relative">
                     <i class="fa-solid fa-user absolute left-4 top-3.5 text-slate-400"></i>
-                    <input type="text" id="patientName" placeholder="ระบุชื่อผู้ป่วย..." 
+                    <input type="text" id="patientName" placeholder="ระบุชื่อผู้ป่วย..."
                         class="w-full pl-10 pr-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none transition font-bold text-lg text-slate-800">
                 </div>
             </div>
@@ -57,7 +91,7 @@
                     <label class="block text-sm font-bold text-slate-700 mb-2">Total Weekly Dose (TWD)</label>
                     <div class="relative">
                         <i class="fa-solid fa-scale-balanced absolute left-4 top-3.5 text-slate-400"></i>
-                        <input type="number" id="twd" step="0.5" placeholder="mg/week" 
+                        <input type="number" id="twd" step="0.5" placeholder="mg/week"
                             class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none transition font-bold text-lg text-slate-800">
                     </div>
                 </div>
@@ -65,23 +99,24 @@
                     <label class="block text-sm font-bold text-slate-700 mb-2">Current INR</label>
                     <div class="relative">
                         <i class="fa-solid fa-droplet absolute left-4 top-3.5 text-rose-400"></i>
-                        <input type="number" id="inr" step="0.1" placeholder="ค่า INR" 
+                        <input type="number" id="inr" step="0.1" placeholder="ค่า INR"
                             class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none transition font-bold text-lg text-slate-800">
                     </div>
                 </div>
             </div>
 
-            <button onclick="calculateDose()" 
+            <button onclick="calculateDose()"
                 class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-brand-200 transition transform active:scale-95 text-lg">
                 <i class="fa-solid fa-calculator mr-2"></i> คำนวณผลลัพธ์
             </button>
 
             <div id="resultSection" class="hidden space-y-6 fade-in pt-4 border-t border-slate-100">
-                
+
                 <div id="statusCard" class="p-5 rounded-xl border-l-4 flex items-start gap-4 shadow-sm bg-white"></div>
 
                 <div id="adjContainer" class="hidden text-center">
-                    <p class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-3">ปรับขนาดยาตามเปอร์เซ็นต์</p>
+                    <p class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-3">ปรับขนาดยาตามเปอร์เซ็นต์
+                    </p>
                     <div id="adjButtons" class="flex flex-wrap justify-center gap-3"></div>
                 </div>
 
@@ -91,17 +126,21 @@
 
                 <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200 mt-6 relative overflow-hidden">
                     <div class="relative z-10">
-                        <label class="block text-sm font-bold text-slate-700 mb-2"><i class="fa-regular fa-note-sticky mr-1"></i> เพิ่มบันทึกช่วยจำ (Note)</label>
-                        <textarea id="userNote" rows="2" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none text-slate-700" placeholder="ระบุอาการ, นัดหมาย หรือเหตุผลการปรับยา..."></textarea>
-                        
-                        <button onclick="saveDataToHistory()" 
+                        <label class="block text-sm font-bold text-slate-700 mb-2"><i
+                                class="fa-regular fa-note-sticky mr-1"></i> เพิ่มบันทึกช่วยจำ (Note)</label>
+                        <textarea id="userNote" rows="2"
+                            class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none text-slate-700"
+                            placeholder="ระบุอาการข้างเคียง, นัดหมาย หรือเหตุผลการปรับยา..."></textarea>
+
+                        <button onclick="saveDataToHistory()"
                             class="mt-4 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow transition flex items-center justify-center gap-2">
                             <i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูลลงประวัติ
                         </button>
                     </div>
                 </div>
 
-                <button onclick="resetCalculator()" class="w-full py-3 text-slate-400 hover:text-slate-600 font-medium transition text-sm">
+                <button onclick="resetCalculator()"
+                    class="w-full py-3 text-slate-400 hover:text-slate-600 font-medium transition text-sm">
                     <i class="fa-solid fa-refresh mr-1"></i> ล้างหน้าจอคำนวณ
                 </button>
             </div>
@@ -109,7 +148,8 @@
             <div class="bg-amber-50 text-amber-800 p-4 rounded-lg text-xs border border-amber-100 flex gap-3">
                 <i class="fa-solid fa-circle-exclamation text-lg mt-0.5"></i>
                 <div>
-                    <strong>Clinical Note:</strong> ถ้าพบ Major bleeding with any INR ให้ Vitamin K 10 mg IV plus FFP และ Repeat Vitamin K every 12 hours if needed.
+                    <strong>Clinical Note:</strong> ถ้าพบ Major bleeding with any INR ให้ Vitamin K 10 mg IV plus FFP
+                    และ Repeat Vitamin K every 12 hours if needed.
                 </div>
             </div>
         </div>
@@ -117,28 +157,34 @@
 
     <div class="w-full max-w-6xl mb-12">
         <div class="flex flex-col md:flex-row justify-between items-center mb-4 px-2 gap-4">
-            <h2 class="text-xl font-bold text-slate-700"><i class="fa-solid fa-clock-rotate-left mr-2"></i>ประวัติการบันทึก (History)</h2>
-            
+            <h2 class="text-xl font-bold text-slate-700"><i
+                    class="fa-solid fa-clock-rotate-left mr-2"></i>ประวัติการบันทึก (History)</h2>
+
             <div class="flex flex-wrap gap-2 justify-center">
-                <button onclick="backupData()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-bold shadow text-sm transition flex items-center gap-2">
+                <button onclick="backupData()"
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-bold shadow text-sm transition flex items-center gap-2">
                     <i class="fa-solid fa-download"></i> Backup
                 </button>
-                <button onclick="document.getElementById('importFile').click()" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-4 py-2 rounded-lg font-bold shadow-sm text-sm transition flex items-center gap-2">
+                <button onclick="document.getElementById('importFile').click()"
+                    class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-4 py-2 rounded-lg font-bold shadow-sm text-sm transition flex items-center gap-2">
                     <i class="fa-solid fa-upload"></i> Restore
                 </button>
                 <input type="file" id="importFile" hidden accept=".json" onchange="restoreData(this)">
-                
+
                 <div class="w-px h-6 bg-slate-300 mx-2 hidden md:block"></div>
 
-                <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-bold shadow text-sm transition flex items-center gap-2">
+                <button onclick="exportToExcel()"
+                    class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-bold shadow text-sm transition flex items-center gap-2">
                     <i class="fa-solid fa-file-excel"></i> Export Excel
                 </button>
-                <button onclick="clearAllHistory()" class="bg-red-100 hover:bg-red-200 text-red-600 px-4 py-2 rounded-lg font-bold text-sm transition" title="ลบทั้งหมด">
+                <button onclick="clearAllHistory()"
+                    class="bg-red-100 hover:bg-red-200 text-red-600 px-4 py-2 rounded-lg font-bold text-sm transition"
+                    title="ลบทั้งหมด">
                     <i class="fa-solid fa-trash-can"></i> ลบทั้งหมด
                 </button>
             </div>
         </div>
-        
+
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-sm text-left text-slate-600">
@@ -155,7 +201,7 @@
                         </tr>
                     </thead>
                     <tbody id="historyTableBody">
-                        </tbody>
+                    </tbody>
                 </table>
             </div>
             <div id="emptyHistoryMsg" class="p-12 text-center text-slate-400 flex flex-col items-center">
@@ -170,7 +216,7 @@
         let currentINR = 0;
         let currentCalculatedTWD = 0;
         let currentStatusText = "";
-        
+
         // --- History & Storage Logic ---
         let savedHistory = JSON.parse(localStorage.getItem('warfarin_history')) || [];
         renderHistoryTable();
@@ -178,7 +224,7 @@
         function saveDataToHistory() {
             const name = document.getElementById('patientName').value.trim();
             const note = document.getElementById('userNote').value.trim();
-            
+
             if (!name) {
                 alert("กรุณาระบุชื่อผู้ป่วยก่อนบันทึก");
                 document.getElementById('patientName').focus();
@@ -198,11 +244,11 @@
                 note: note
             };
 
-            savedHistory.unshift(record); 
+            savedHistory.unshift(record);
             localStorage.setItem('warfarin_history', JSON.stringify(savedHistory));
 
             alert("บันทึกข้อมูลเรียบร้อยแล้ว!");
-            document.getElementById('userNote').value = ""; 
+            document.getElementById('userNote').value = "";
             renderHistoryTable();
             document.querySelector('.fa-clock-rotate-left').scrollIntoView({ behavior: 'smooth' });
         }
@@ -211,7 +257,7 @@
             const tbody = document.getElementById('historyTableBody');
             const msg = document.getElementById('emptyHistoryMsg');
             tbody.innerHTML = '';
-            
+
             if (savedHistory.length === 0) {
                 msg.classList.remove('hidden');
                 return;
@@ -242,7 +288,7 @@
         }
 
         function deleteSingleHistory(index) {
-            if(confirm('คุณต้องการลบรายการนี้ใช่หรือไม่?')) {
+            if (confirm('คุณต้องการลบรายการนี้ใช่หรือไม่?')) {
                 savedHistory.splice(index, 1);
                 localStorage.setItem('warfarin_history', JSON.stringify(savedHistory));
                 renderHistoryTable();
@@ -250,7 +296,7 @@
         }
 
         function clearAllHistory() {
-            if(confirm('คำเตือน: คุณต้องการลบประวัติ "ทั้งหมด" ใช่หรือไม่? (ไม่สามารถกู้คืนได้เว้นแต่จะมีไฟล์ Backup)')) {
+            if (confirm('คำเตือน: คุณต้องการลบประวัติ "ทั้งหมด" ใช่หรือไม่? (ไม่สามารถกู้คืนได้เว้นแต่จะมีไฟล์ Backup)')) {
                 savedHistory = [];
                 localStorage.removeItem('warfarin_history');
                 renderHistoryTable();
@@ -263,7 +309,7 @@
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(savedHistory));
             const dlNode = document.createElement('a');
             dlNode.setAttribute("href", dataStr);
-            dlNode.setAttribute("download", "warfarin_backup_" + new Date().toISOString().slice(0,10) + ".json");
+            dlNode.setAttribute("download", "warfarin_backup_" + new Date().toISOString().slice(0, 10) + ".json");
             document.body.appendChild(dlNode);
             dlNode.click();
             dlNode.remove();
@@ -273,11 +319,11 @@
             const file = input.files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = function (e) {
                 try {
                     const loadedData = JSON.parse(e.target.result);
                     if (Array.isArray(loadedData)) {
-                        if(confirm(`พบข้อมูล ${loadedData.length} รายการ ต้องการนำเข้าหรือไม่? (ข้อมูลเก่าจะถูกแทนที่)`)) {
+                        if (confirm(`พบข้อมูล ${loadedData.length} รายการ ต้องการนำเข้าหรือไม่? (ข้อมูลเก่าจะถูกแทนที่)`)) {
                             savedHistory = loadedData;
                             localStorage.setItem('warfarin_history', JSON.stringify(savedHistory));
                             renderHistoryTable();
@@ -304,7 +350,7 @@
             const ws = XLSX.utils.json_to_sheet(excelData);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Warfarin_History");
-            XLSX.writeFile(wb, `Warfarin_Patient_Data_${new Date().toISOString().slice(0,10)}.xlsx`);
+            XLSX.writeFile(wb, `Warfarin_Patient_Data_${new Date().toISOString().slice(0, 10)}.xlsx`);
         }
 
         // --- Calculation Logic ---
@@ -316,7 +362,7 @@
 
             currentTWD = parseFloat(twdInput);
             currentINR = parseFloat(inrInput);
-            currentCalculatedTWD = currentTWD; 
+            currentCalculatedTWD = currentTWD;
 
             document.getElementById('resultSection').classList.remove('hidden');
             setTimeout(() => document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' }), 100);
@@ -376,7 +422,7 @@
         }
 
         function applyAdjustment(pct, type) {
-            let val = type === 'increase' ? currentTWD * (1 + pct/100) : currentTWD * (1 - pct/100);
+            let val = type === 'increase' ? currentTWD * (1 + pct / 100) : currentTWD * (1 - pct / 100);
             val = Math.round(val * 2) / 2;
             renderNewTWD(val);
             calculateRegimen(val);
@@ -387,17 +433,17 @@
             currentCalculatedTWD = val;
             const el = document.getElementById('newDoseDisplay');
             el.classList.remove('hidden');
-            
+
             // สร้างตัวเลือกสำหรับ Dropdown (+/- ทีละ 0.5 mg จากค่าที่ระบบแนะนำ 6 Step)
             let optionsHtml = "";
             for (let i = -6; i <= 6; i++) {
                 let optVal = val + (i * 0.5);
                 if (optVal <= 0 && i < 0) continue; // ข้ามค่าติดลบ หรือ 0 (ในกรณีลดลง)
-                
+
                 let selected = (i === 0) ? "selected" : "";
                 let label = optVal.toFixed(1) + " mg/week";
                 if (i === 0) label += " (ค่าที่คำนวณได้)";
-                
+
                 optionsHtml += `<option value="${optVal}" ${selected}>${label}</option>`;
             }
 
@@ -420,7 +466,7 @@
                     <i class="fa-solid fa-pills absolute -right-6 -bottom-6 text-8xl text-white opacity-5"></i>
                 </div>
             `;
-            
+
             updatePercentageUI(val);
         }
 
@@ -436,10 +482,10 @@
             if (currentTWD > 0) {
                 pctChange = ((val - currentTWD) / currentTWD) * 100;
             }
-            
+
             let pctText = "";
             let pctClass = "text-sm font-medium px-4 py-1.5 rounded-full inline-flex items-center gap-1 ";
-            
+
             if (pctChange > 0) {
                 pctText = `ปรับเพิ่มขึ้น +${pctChange.toFixed(1)}%`;
                 pctClass += "bg-rose-500/20 text-rose-300";
@@ -458,11 +504,11 @@
             }
         }
 
-        // --- Regimen Algorithm (No Changes) ---
+        // --- Regimen Algorithm (Multiple Options) ---
         function calculateRegimen(targetTWD) {
             const available = [{ strength: 5, label: '5 mg' }, { strength: 3, label: '3 mg' }, { strength: 2, label: '2 mg' }];
-            let bestSolution = null;
-            let bestSD = Infinity;
+            let allSolutions = [];
+            let seenKeys = new Set();
 
             for (let s1 of available) {
                 for (let t1 of [0, 0.5, 1, 1.5, 2]) {
@@ -481,58 +527,207 @@
                                     if (patterns.length > 2) continue;
 
                                     let daily = [];
-                                    patterns.forEach(p => { for(let k=0; k<p.days; k++) daily.push(p.dose); });
-                                    const mean = daily.reduce((a,b)=>a+b,0)/7;
-                                    const variance = daily.reduce((a,b)=>a+Math.pow(b-mean,2),0)/7;
+                                    patterns.forEach(p => { for (let k = 0; k < p.days; k++) daily.push(p.dose); });
+                                    const mean = daily.reduce((a, b) => a + b, 0) / 7;
+                                    const variance = daily.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / 7;
                                     const sd = Math.sqrt(variance);
 
-                                    if (sd < 3 && sd < bestSD) { bestSD = sd; bestSolution = { patterns, sd }; }
+                                    if (sd < 3) {
+                                        // Deduplicate by unique key of strength, tabs, days
+                                        const sortedP = [...patterns].sort((a, b) => b.days - a.days || a.strength.strength - b.strength.strength);
+                                        const key = sortedP.map(p => `${p.strength.strength}x${p.tabs}d${p.days}`).join('|');
+                                        if (!seenKeys.has(key)) {
+                                            seenKeys.add(key);
+                                            allSolutions.push({ patterns, sd });
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
-            renderRegimenCards(bestSolution, targetTWD);
+
+            // Sort: easiest first — fewer half-tab days, then fewer patterns, then lower SD
+            allSolutions.sort((a, b) => {
+                const halfA = a.patterns.reduce((s, p) => s + (p.tabs % 1 !== 0 ? p.days : 0), 0);
+                const halfB = b.patterns.reduce((s, p) => s + (p.tabs % 1 !== 0 ? p.days : 0), 0);
+                if (halfA !== halfB) return halfA - halfB;
+                if (a.patterns.length !== b.patterns.length) return a.patterns.length - b.patterns.length;
+                return a.sd - b.sd;
+            });
+
+            renderAllRegimens(allSolutions.slice(0, 4), targetTWD);
         }
 
-        function renderRegimenCards(solution, targetTWD) {
+        function getRegimenDescription(solution) {
+            const halfDays = solution.patterns.reduce((s, p) => s + (p.tabs % 1 !== 0 ? p.days : 0), 0);
+            const numPatterns = solution.patterns.length;
+            let parts = [];
+            if (halfDays === 0) {
+                parts.push('<i class="fa-solid fa-circle-check text-green-500 mr-0.5"></i> ไม่ต้องหักเม็ดยา');
+            } else {
+                parts.push('<i class="fa-solid fa-scissors text-amber-500 mr-0.5"></i> หักเม็ดยา ' + halfDays + ' วัน/สัปดาห์');
+            }
+            if (numPatterns === 1) parts.push('ทานเท่ากันทุกวัน');
+            else parts.push('สลับ ' + numPatterns + ' ขนาด');
+            return parts.join(' &bull; ');
+        }
+
+        function renderAllRegimens(solutions, targetTWD) {
             const container = document.getElementById('regimenSection');
-            if (!solution) {
+            if (!solutions || solutions.length === 0) {
                 container.innerHTML = `<div class="text-center p-8 bg-slate-50 rounded-xl text-slate-500">...ไม่สามารถจัดตารางยาให้สอดคล้องกับตัวเลขนี้ได้ กรุณาปรับ TWD ใหม่...</div>`;
                 return;
             }
-            const dayNames = ['จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์', 'อาทิตย์'];
-            let html = `<div class="space-y-3">`;
-            let currentDayIndex = 0;
-            solution.patterns.forEach((p, index) => {
-                const startDay = dayNames[currentDayIndex];
-                const endDay = dayNames[currentDayIndex + p.days - 1];
-                let dayLabel = (p.days === 1) ? startDay : `${startDay} - ${endDay}`;
-                if (p.days === 7) dayLabel = "กินทุกวัน (จันทร์ - อาทิตย์)";
-                
-                const rowTotal = p.dose * p.days;
-                let pillText = "", subText = "";
-                
-                if (p.dose === 0) {
-                    pillText = `<span class="text-slate-400">หยุดยา</span>`;
-                    subText = `<div class="text-xs text-slate-300 mt-1">0 mg × ${p.days} วัน = 0 mg</div>`;
-                } else {
-                    const tabStr = p.tabs === 0.5 ? 'ครึ่งเม็ด' : p.tabs === 1.5 ? '1 เม็ดครึ่ง' : p.tabs + ' เม็ด';
-                    pillText = `<span class="font-bold text-slate-700 text-lg">${p.strength.label} <span class="text-brand-600">(${tabStr})</span></span>`;
-                    subText = `<div class="font-bold text-slate-500 text-lg">(${p.dose} mg/วัน)</div>
-                        <div class="text-xs text-slate-400 mt-1 font-medium bg-slate-100 inline-block px-2 py-0.5 rounded">${p.dose} mg × ${p.days} วัน = ${rowTotal} mg</div>`;
-                }
-                const cardBg = index === 0 ? 'bg-white border-brand-200 shadow-brand-100' : 'bg-slate-50 border-slate-200';
-                const dayBadgeColor = index === 0 ? 'bg-brand-100 text-brand-700' : 'bg-slate-200 text-slate-600';
-                html += `<div class="pill-card border rounded-2xl p-4 flex justify-between items-center shadow-sm ${cardBg}">
-                    <div><div class="inline-block px-3 py-1 rounded-full text-xs font-bold mb-2 ${dayBadgeColor}">${dayLabel}</div>
-                    <div class="flex items-center gap-2"><i class="fa-solid fa-capsules text-slate-300"></i>${pillText}</div></div>
-                    <div class="text-right">${subText}</div></div>`;
-                currentDayIndex += p.days;
+            let html = '';
+            if (solutions.length > 1) {
+                let optionsHtml = '';
+                solutions.forEach((sol, idx) => {
+                    const desc = getRegimenDescriptionTextOnly(sol);
+                    optionsHtml += `<option value="${idx}">ตัวเลือกที่ ${idx + 1} ${idx === 0 ? '(แนะนำ)' : ''} - ${desc}</option>`;
+                });
+
+                html += `
+                <div class="mb-4 bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200">
+                    <label class="block text-sm font-bold text-slate-700 mb-2"><i class="fa-solid fa-list-check mr-1 text-brand-500"></i> เลือกรูปแบบการทานยา (พบ ${solutions.length} รูปแบบ เรียงจากง่ายที่สุด)</label>
+                    <div class="relative">
+                        <select id="regimenSelector" onchange="changeRegimenOption(this.value)" class="appearance-none w-full bg-white border-2 border-slate-200 hover:border-brand-400 px-4 py-3 rounded-xl font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 shadow-sm cursor-pointer pr-10 transition-all text-sm sm:text-base">
+                            ${optionsHtml}
+                        </select>
+                        <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                    </div>
+                </div>`;
+            }
+
+            html += `<div id="regimenCardsContainer">`;
+            solutions.forEach((sol, idx) => {
+                html += `<div id="regimen-card-${idx}" class="${idx === 0 ? 'block fade-in' : 'hidden'}">`;
+                html += renderSingleRegimenCard(sol, idx, solutions.length > 1);
+                html += `</div>`;
             });
             html += `</div>`;
             container.innerHTML = html;
+        }
+
+        function changeRegimenOption(selectedIndex) {
+            const container = document.getElementById('regimenCardsContainer');
+            if (!container) return;
+            const cards = container.children;
+            for (let i = 0; i < cards.length; i++) {
+                if (i == selectedIndex) {
+                    cards[i].classList.remove('hidden');
+                    cards[i].classList.add('block', 'fade-in');
+                } else {
+                    cards[i].classList.remove('block', 'fade-in');
+                    cards[i].classList.add('hidden');
+                }
+            }
+        }
+
+        function getRegimenDescriptionTextOnly(solution) {
+            const halfDays = solution.patterns.reduce((s, p) => s + (p.tabs % 1 !== 0 ? p.days : 0), 0);
+            const numPatterns = solution.patterns.length;
+            let parts = [];
+            if (halfDays === 0) {
+                parts.push('ไม่ต้องหักเม็ดยา');
+            } else {
+                parts.push('หักเม็ดยา ' + halfDays + ' วัน');
+            }
+            if (numPatterns === 1) parts.push('ทานเท่ากันทุกวัน');
+            else parts.push('สลับ ' + numPatterns + ' ขนาด');
+            return parts.join(', ');
+        }
+
+        function renderSingleRegimenCard(solution, index, showBadge) {
+            const dayNamesShort = ['จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.', 'อา.'];
+            const dayColors = ['text-yellow-500', 'text-pink-500', 'text-green-500', 'text-orange-500', 'text-blue-500', 'text-orange-500', 'text-red-500'];
+
+            let dailySchedule = [];
+            // เรียง pattern ให้ฝั่งที่มีวันมากกว่ามาก่อน เพื่อให้ฝั่งที่มีวันน้อย (ส่วนน้อย) ตกอยู่ท้ายสัปดาห์ (เสาร์/อาทิตย์)
+            const sortedPatterns = [...solution.patterns].sort((a, b) => b.days - a.days);
+            sortedPatterns.forEach(p => {
+                for (let i = 0; i < p.days; i++) { dailySchedule.push(p); }
+            });
+
+            let theadHtml = '', pillsRowHtml = '', doseRowHtml = '';
+
+            dailySchedule.forEach((p, idx) => {
+                theadHtml += `<th class="py-2 px-1 font-bold ${dayColors[idx]} w-[14.28%] border-b-2 border-slate-100 text-base md:text-lg">${dayNamesShort[idx]}</th>`;
+
+                if (p.dose === 0) {
+                    pillsRowHtml += `<td class="p-1 sm:p-2 border-slate-100 align-top">
+                        <div class="flex flex-col items-center justify-center h-full opacity-60 py-3">
+                            <i class="fa-solid fa-ban text-slate-400 mb-1 text-2xl"></i>
+                            <span class="text-[10px] sm:text-xs font-bold text-slate-500">หยุดยา</span>
+                        </div>
+                    </td>`;
+                    doseRowHtml += `<td class="py-2 px-1 text-xs sm:text-sm font-medium text-slate-400 border-slate-100 bg-slate-50/50">0 mg</td>`;
+                } else {
+                    const tabStr = p.tabs === 0.5 ? 'ครึ่งเม็ด' : p.tabs === 1.5 ? '1 เม็ดครึ่ง' : p.tabs + ' เม็ด';
+                    let pillColor = 'text-slate-300', pillBg = 'bg-slate-100';
+                    if (p.strength.strength === 5) { pillColor = 'text-pink-400'; pillBg = 'bg-pink-50'; }
+                    else if (p.strength.strength === 3) { pillColor = 'text-blue-400'; pillBg = 'bg-blue-50'; }
+                    else if (p.strength.strength === 2) { pillColor = 'text-orange-400'; pillBg = 'bg-orange-50'; }
+
+                    let pillVisuals = '';
+                    let fullPills = Math.floor(p.tabs);
+                    let hasHalf = (p.tabs % 1 !== 0);
+
+                    for (let i = 0; i < fullPills; i++) {
+                        pillVisuals += `<svg class="w-5 h-5 sm:w-6 sm:h-6 inline-block ${pillColor} drop-shadow-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor" /><line x1="12" y1="4" x2="12" y2="20" stroke="rgba(255,255,255,0.9)" stroke-width="2" /></svg>`;
+                    }
+                    if (hasHalf) {
+                        pillVisuals += `<svg class="w-5 h-5 sm:w-6 sm:h-6 inline-block ${pillColor} drop-shadow-sm" viewBox="0 0 24 24"><path d="M12 2 A 10 10 0 0 0 12 22 L 12 2 Z" fill="currentColor" /></svg>`;
+                    }
+
+                    pillsRowHtml += `<td class="p-1 sm:p-2 border-slate-100 align-top">
+                        <div class="flex flex-col items-center gap-1.5 h-full mt-1">
+                            <div class="flex gap-0.5 items-center justify-center ${pillBg} p-1 rounded-md border border-white shadow-inner w-full min-h-[36px] sm:min-h-[44px]">${pillVisuals}</div>
+                            <div class="text-center">
+                                <div class="text-[11px] sm:text-xs font-bold text-slate-700 leading-tight">${p.strength.label}</div>
+                                <div class="text-[9px] sm:text-[10px] text-brand-600 font-medium leading-tight mt-0.5">${tabStr}</div>
+                            </div>
+                        </div>
+                    </td>`;
+                    doseRowHtml += `<td class="py-2 px-1 text-xs sm:text-sm font-bold text-slate-600 border-slate-100 bg-slate-50/50">${p.dose} mg</td>`;
+                }
+            });
+
+            let totalActualDose = dailySchedule.reduce((sum, p) => sum + p.dose, 0);
+            const desc = getRegimenDescription(solution);
+            const isFirst = index === 0;
+            const borderCls = isFirst && showBadge ? 'border-green-300 ring-2 ring-green-100' : 'border-slate-200';
+            let badgeHtml = '';
+            if (showBadge) {
+                badgeHtml = isFirst
+                    ? `<div class="flex items-center gap-2 mb-1"><span class="bg-green-500 text-white text-[10px] sm:text-xs font-bold px-3 py-1 rounded-full shadow-sm"><i class="fa-solid fa-star mr-1"></i>แนะนำ</span><span class="text-sm font-bold text-slate-700">ตัวเลือกที่ ${index + 1}</span></div>`
+                    : `<div class="flex items-center gap-2 mb-1"><span class="bg-slate-200 text-slate-600 text-[10px] sm:text-xs font-bold px-3 py-1 rounded-full">ตัวเลือกที่ ${index + 1}</span></div>`;
+            }
+
+            return `
+            <div class="bg-white rounded-2xl border ${borderCls} shadow-sm pt-4 md:pt-5 overflow-hidden mb-4">
+                <div class="px-3 sm:px-5">
+                    ${badgeHtml}
+                    <p class="text-xs text-slate-500 mb-3">${desc}</p>
+                </div>
+                <h3 class="text-xs sm:text-sm font-bold text-slate-400 mb-3 uppercase tracking-wider text-center"><i class="fa-regular fa-calendar-days mr-1"></i> ตารางการทานยา 7 วัน</h3>
+                <div class="overflow-x-auto pb-1 px-1 sm:px-3">
+                    <table class="w-full text-center border-collapse min-w-[360px] sm:min-w-[500px] table-fixed">
+                        <thead>
+                            <tr>${theadHtml}</tr>
+                        </thead>
+                        <tbody class="divide-x divide-slate-100">
+                            <tr>${pillsRowHtml}</tr>
+                            <tr class="divide-x divide-white border-t border-slate-100">${doseRowHtml}</tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-2 border-t border-slate-100 flex justify-between items-center bg-slate-50 p-4 md:px-6">
+                    <span class="text-sm font-bold text-slate-600">รวมปริมาณยา (TWD):</span>
+                    <span class="text-xl font-black text-brand-700">${totalActualDose} mg</span>
+                </div>
+            </div>`;
         }
 
         function resetCalculator() {
@@ -545,4 +740,5 @@
         }
     </script>
 </body>
+
 </html>
