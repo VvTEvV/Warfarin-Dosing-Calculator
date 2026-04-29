@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creatinine Clearance Calculator & Drug Dosing</title>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --hue: 215;
+            --primary: hsl(var(--hue), 80%, 50%);
+            --primary-light: hsl(var(--hue), 80%, 95%);
+            --primary-hover: hsl(var(--hue), 80%, 45%);
+            --secondary: hsl(280, 60%, 50%);
+
+            --bg-color: #f0f4f8;
+            --surface: rgba(255, 255, 255, 0.85);
+            --surface-solid: #ffffff;
+            --border: hsl(var(--hue), 20%, 85%);
+
+            --text-main: hsl(var(--hue), 30%, 15%);
+            --text-muted: hsl(var(--hue), 15%, 45%);
+
+            --danger: hsl(350, 80%, 50%);
+            --danger-bg: hsl(350, 80%, 96%);
+            --warning: hsl(35, 90%, 50%);
+            --success: hsl(150, 70%, 40%);
+
+            --radius-sm: 8px;
+            --radius-md: 16px;
+            --radius-lg: 24px;
+
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+            --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.12);
+
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Prompt', sans-serif;
+            background: radial-gradient(circle at top left, #e0eafc, #cfdef3);
+            background-attachment: fixed;
+            color: var(--text-main);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .glass-card {
+            background: var(--surface);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            transition: var(--transition);
+        }
+
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .input-group label {
+            font-weight: 500;
+            font-size: 0.95rem;
+            color: var(--text-main);
+        }
+
+        .input-group input[type="number"] {
+            padding: 0.8rem 1rem;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 1rem;
+            background: var(--surface-solid);
+            transition: var(--transition);
+            outline: none;
+        }
+
+        .input-group input[type="number"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        /* Segmented Control for Gender */
+        .gender-selector {
+            display: flex;
+            background: var(--border);
+            border-radius: var(--radius-sm);
+            padding: 0.25rem;
+            gap: 0.25rem;
+        }
+
+        .gender-selector label {
+            flex: 1;
+            text-align: center;
+            padding: 0.6rem;
+            border-radius: calc(var(--radius-sm) - 0.25rem);
+            cursor: pointer;
+            font-weight: 500;
+            transition: var(--transition);
+            color: var(--text-muted);
+        }
+
+        .gender-selector input[type="radio"] {
+            display: none;
+        }
+
+        .gender-selector input[type="radio"]:checked+label {
+            background: var(--surface-solid);
+            color: var(--primary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-primary {
+            display: block;
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--primary), #0052cc);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(2, 132, 199, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        /* Result Section */
+        #result-section {
+            display: none;
+            animation: slideUp 0.5s ease forwards;
+        }
+
+        .result-display {
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(to right, var(--primary-light), #f3e8ff);
+            border-radius: var(--radius-md);
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+
+        .result-title {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .result-value {
+            font-size: 4rem;
+            font-weight: 700;
+            color: var(--primary);
+            line-height: 1;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .result-unit {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* Table Styles */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: var(--surface-solid);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        th,
+        td {
+            padding: 1.2rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: var(--bg-color);
+            font-weight: 600;
+            color: var(--text-main);
+            font-size: 1.05rem;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .category-row {
+            background: var(--primary-light) !important;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .drug-name {
+            font-weight: 500;
+            color: var(--secondary);
+        }
+
+        .text-danger {
+            color: var(--danger);
+        }
+
+        .text-warning {
+            color: var(--warning);
+        }
+
+        .fw-bold {
+            font-weight: 600;
+        }
+
+        .text-muted {
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .glass-card {
+                padding: 1.5rem;
+            }
+
+            .calculator-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .result-value {
+                font-size: 3rem;
+            }
+
+            th,
+            td {
+                padding: 0.8rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1><i class="fa-solid fa-kidneys"></i> CrCl & Dosing Calculator</h1>
+            <p>คำนวณอัตราการกรองของไตและแนะนำการปรับขนาดยา (Cockcroft-Gault Equation)</p>
+        </div>
+
+        <div class="glass-card">
+            <form id="crcl-form">
+                <div class="calculator-grid">
+                    <div class="input-group">
+                        <label>เพศ (Gender)</label>
+                        <div class="gender-selector">
+                            <input type="radio" id="gender-male" name="gender" value="male" checked>
+                            <label for="gender-male"><i class="fa-solid fa-mars"></i> ชาย</label>
+
+                            <input type="radio" id="gender-female" name="gender" value="female">
+                            <label for="gender-female"><i class="fa-solid fa-venus"></i> หญิง</label>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="age">อายุ (ปี)</label>
+                        <input type="number" id="age" min="1" max="150" placeholder="ระบุอายุ" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="weight">น้ำหนัก (Kg.)</label>
+                        <input type="number" id="weight" step="0.1" min="1" placeholder="ระบุน้ำหนัก" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="scr">Serum Creatinine (mg/dL)</label>
+                        <input type="number" id="scr" step="0.01" min="0.1" placeholder="ระบุค่า SCr" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary">
+                    <i class="fa-solid fa-calculator"></i> คำนวณ CrCl
+                </button>
+            </form>
+        </div>
+
+        <div id="result-section" class="glass-card">
+            <div class="result-display">
+                <div class="result-title">ค่า Creatinine Clearance (CrCl) ของคุณคือ</div>
+                <div class="result-value">
+                    <span id="crcl-value">0.00</span>
+                    <span class="result-unit">mL/min</span>
+                </div>
+            </div>
+
+            <h2 style="margin-bottom: 1rem; color: var(--text-main); font-size: 1.5rem;">
+                <i class="fa-solid fa-pills"></i> คำแนะนำการปรับขนาดยา
+            </h2>
+
+            <div class="table-container">
+                <table id="dosing-table">
+                    <thead>
+                        <tr>
+                            <th width="30%">ชื่อยา (Drug Name)</th>
+                            <th width="70%">คำแนะนำ (Recommendation)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dosing-body">
+                        <!-- Content will be generated via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const db = [
+            {
+                category: "ยาปฏิชีวนะ",
+                drugs: [
+                    {
+                        name: "Amoxicillin/clavulanic acid",
+                        rules: [
+                            { condition: (crcl) => crcl > 30, text: "CrCl > 30 : ไม่ต้องปรับขนาดยา" },
+                            { condition: (crcl) => crcl >= 10 && crcl <= 30, text: "CrCl 10-30 : 250-500 mg q 12 hr" },
+                            { condition: (crcl) => crcl < 10, text: "CrCl < 10 : 250-500 mg q 24 hr" }
+                        ]
+                    },
+                    {
+                        name: "Ampicillin",
+                        rules: [
+                            { condition: (crcl) => crcl > 50, text: "CrCl >50 : q 6 hr" },
+                            { condition: (crcl) => crcl >= 10 && crcl <= 50, text: "CrCl 10-50 : q 6-12 hr" },
+                            { condition: (crcl) => crcl < 10, text: "CrCl <10 : q 12-24 hr" }
+                        ]
+                    },
+                    {
+                        name: "acyclovir",
+                        rules: [
+                            { condition: (crcl) => crcl > 25, text: "CrCl > 25 : ไม่มีข้อมูลแนะนำปรับลดในตาราง (พิจารณาขนาดยาปกติ)" },
+                            { condition: (crcl) => crcl >= 10 && crcl <= 25, text: "CrCl 10-25 : 800 mg 5 times daily or q 8 hr" },
+                            { condition: (crcl) => crcl < 10, text: "CrCl < 10 : 200 mg 5 times daily or 400 mg q 12 hr or 800 mg q 12 hr" }
+                        ]
+                    },
+                    {
+                        name: "cephalexin",
+                        rules: [
+                            { condition: (crcl) => crcl > 60, text: "CrCl > 60 : ไม่ต้องปรับขนาดยา" },
+                            { condition: (crcl) => crcl >= 30 && crcl <= 59, text: "CrCl 30-59 : ไม่ต้องปรับขนาดยา (max1,000 mg/day)" },
+                            { condition: (crcl) => crcl >= 15 && crcl <= 29, text: "CrCl 15-29 : 250 mg q 8-12 hr" },
+                            { condition: (crcl) => crcl >= 5 && crcl <= 14, text: "CrCl 5-14 : 250 q 24 hr" },
+                            { condition: (crcl) => crcl >= 1 && crcl <= 4, text: "CrCl 1-4 : 250 mg q 48-60 hr" },
+                            { condition: (crcl) => crcl < 1, text: "CrCl < 1 : ข้อมูลไม่เพียงพอ" }
+                        ]
+                    },
+                    {
+                        name: "Cefdinir",
+                        rules: [
+                            { condition: (crcl) => crcl >= 30, text: "CrCl > 30 : ไม่ต้องปรับขนาดยา" },
+                            { condition: (crcl) => crcl < 30, text: "CrCl < 30 : 300 mg OD" }
+                        ]
+                    },
+                    {
+                        name: "Ciprofloxacin",
+                        rules: [
+                            { condition: (crcl) => crcl > 50, text: "CrCl > 50 : ไม่ต้องปรับขนาดยา" },
+                            { condition: (crcl) => crcl >= 30 && crcl <= 50, text: "CrCl 30-50 : 250-500 mg oral q 12 hr" },
+                            { condition: (crcl) => crcl >= 5 && crcl < 30, text: "CrCl 5-29 : 250-500 mg oral q 18 hr" },
+                            { condition: (crcl) => crcl < 5, text: "CrCl < 5 : ข้อมูลไม่เพียงพอ" }
+                        ]
+                    },
+                    {
+                        name: "Levofloxacin",
+                        rules: [
+                            { condition: (crcl) => crcl >= 50, text: "CrCl >= 50 : ไม่มีข้อมูลแนะนำปรับลดในตาราง (พิจารณาขนาดยาปกติ)" },
+                            { condition: (crcl) => crcl >= 20 && crcl <= 49, text: "CrCl 20-49 : ไม่ต้องปรับขนาดยา" },
+                            { condition: (crcl) => crcl >= 10 && crcl <= 19, text: "CrCl 10-19 : 250 mg q 48 hr" },
+                            { condition: (crcl) => crcl < 10, text: "CrCl < 10 : ข้อมูลไม่เพียงพอ" }
+                        ]
+                    },
+                    {
+                        name: "TMP/SMX",
+                        rules: [
+                            { condition: (crcl) => crcl > 30, text: "CrCl > 30 : 100%" },
+                            { condition: (crcl) => crcl >= 15 && crcl <= 30, text: "CrCl 15-30 : 50%" },
+                            { condition: (crcl) => crcl < 15, text: "CrCl < 15 : <span class=\"text-danger fw-bold\">ไม่แนะนำให้ใช้</span>" }
+                        ]
+                    },
+                    {
+                        name: "Clarithromycin",
+                        rules: [
+                            { condition: (crcl) => crcl >= 30, text: "CrCl > 30 : ไม่ต้องปรับขนาดยา" },
+                            { condition: (crcl) => crcl < 30, text: "CrCl < 30 : 50%" }
+                        ]
+                    }
+                ]
+            },
+            {
+                category: "ยาลดความดันโลหิต",
+                drugs: [
+                    {
+                        name: "Atenolol",
+                        rules: [
+                            { condition: (crcl) => crcl > 35, text: "CrCl > 35 : ไม่ต้องปรับขนาดยา" },
+                            { condition: (crcl) => crcl >= 15 && crcl <= 35, text: "CrCl 15-35 : max dose 50 mg daily" },
+                            { condition: (crcl) => crcl < 15, text: "CrCl < 15 : max 25 mg daily" }
+                        ]
+                    },
+                    {
+                        name: "Enalapril",
+                        rules: [
+                            { condition: (crcl) => crcl >= 30, text: "CrCl > 30 : ไม่ต้องปรับขนาดยา" },
+                            { condition: (crcl) => crcl < 30, text: "CrCl < 30 : 2.5 mg/day; titrated upward until blood pressure is controlled." }
+                        ]
+                    },
+                    {
+                        name: "Propranolol",
+                        rules: [
+                            { condition: (crcl) => crcl > 40, text: "CrCl > 40 : ไม่มีข้อมูลแนะนำปรับลดในตาราง (พิจารณาขนาดยาปกติ)" },
+                            { condition: (crcl) => crcl >= 10 && crcl <= 40, text: "CrCl 10-40 : 50% หรือขนาดปกติ ทุก 24-36 ชม." },
+                            { condition: (crcl) => crcl < 10, text: "CrCl < 10 : 25% หรือขนาดปกติ ทุก 40-60 ชม." }
+                        ]
+                    }
+                ]
+            },
+            {
+                category: "ยาระบบประสาท",
+                drugs: [
+                    {
+                        name: "Gabapentin",
+                        rules: [
+                            { condition: (crcl) => crcl > 60, text: "CrCl > 60 : 300-1,200 mg 3 times daily" },
+                            { condition: (crcl) => crcl >= 30 && crcl <= 59, text: "CrCl 30-59 : 200-700 mg twice daily" },
+                            { condition: (crcl) => crcl > 15 && crcl <= 29, text: "CrCl 15-29 : 200-700 mg OD" },
+                            { condition: (crcl) => crcl === 15, text: "CrCl 15 : 100-300 mg OD" },
+                            { condition: (crcl) => crcl < 15, text: "CrCl < 15 : reduce daily dose (50 to 150 mg/day)" }
+                        ]
+                    },
+                    {
+                        name: "Levetiracetam",
+                        rules: [
+                            { condition: (crcl) => crcl > 80, text: "CrCl > 80 : 500-1,500 mg q 12 hr" },
+                            { condition: (crcl) => crcl >= 50 && crcl <= 80, text: "CrCl 50-80 : 500-1,000 mg q 12 hr" },
+                            { condition: (crcl) => crcl >= 30 && crcl < 50, text: "CrCl 30-50 : 250-750 mg q 12 hr" },
+                            { condition: (crcl) => crcl < 30, text: "CrCl < 30 : 250-500 mg q 12 hr" }
+                        ]
+                    }
+                ]
+            },
+            {
+                category: "ยาลดไขมัน",
+                drugs: [
+                    {
+                        name: "Rosuvastatin",
+                        rules: [
+                            { condition: (crcl) => crcl >= 30, text: "CrCl > 30 : ไม่ต้องปรับขนาดยา" },
+                            { condition: (crcl) => crcl < 30, text: "CrCl < 30 : เริ่มด้วย 5 mg OD (max: 10 mg/day)" }
+                        ]
+                    },
+                    {
+                        name: "Simvastatin",
+                        rules: [
+                            { condition: (crcl) => crcl > 80, text: "CrCl > 80 : ไม่มีข้อมูลแนะนำปรับลดในตาราง (พิจารณาขนาดยาปกติ)" },
+                            { condition: (crcl) => crcl >= 30 && crcl <= 80, text: "CrCl 30-80 : ไม่ต้องปรับขนาดยา" },
+                            { condition: (crcl) => crcl < 30, text: "CrCl < 30 : เริ่มด้วย 5 mg/day" }
+                        ]
+                    },
+                    {
+                        name: "Gemfibrozil",
+                        rules: [
+                            { condition: (crcl) => crcl >= 30, text: "CrCl >= 30 : ไม่มีข้อมูลแนะนำปรับลดในตาราง (พิจารณาขนาดยาปกติ)" },
+                            { condition: (crcl) => crcl < 30, text: "CrCl < 30 : <span class=\"text-danger fw-bold\">ห้ามใช้!</span>" }
+                        ]
+                    }
+                ]
+            },
+            {
+                category: "ยาบรรเทาอาการปวด",
+                drugs: [
+                    {
+                        name: "Tramadol",
+                        rules: [
+                            { condition: (crcl) => crcl >= 30, text: "CrCl >= 30 : ไม่มีข้อมูลแนะนำปรับลดในตาราง (พิจารณาขนาดยาปกติ)" },
+                            { condition: (crcl) => crcl < 30, text: "CrCl < 30 : MAX 200 mg/day" }
+                        ]
+                    },
+                    {
+                        name: "Colchicine",
+                        rules: [
+                            { condition: (crcl) => crcl > 80, text: "CrCl > 80 : ไม่มีข้อมูลแนะนำปรับลดในตาราง (พิจารณาขนาดยาปกติ)" },
+                            { condition: (crcl) => crcl >= 30 && crcl <= 80, text: "CrCl 30-80 : ไม่ต้องปรับขนาดยา" },
+                            { condition: (crcl) => crcl < 30, text: "CrCl < 30 : เริ่มด้วย 0.3 mg/day" }
+                        ]
+                    }
+                ]
+            },
+            {
+                category: "ยาลดกรดยูริกในเลือด",
+                drugs: [
+                    {
+                        name: "Allopurinol",
+                        rules: [
+                            { condition: (crcl) => crcl > 20, text: "CrCl > 20 : ไม่มีข้อมูลแนะนำปรับลดในตาราง (พิจารณาขนาดยาปกติ)" },
+                            { condition: (crcl) => crcl >= 10 && crcl <= 20, text: "CrCl 10-20 : 200 mg daily" },
+                            { condition: (crcl) => crcl >= 3 && crcl < 10, text: "CrCl 3-10 : < 100 mg daily" },
+                            { condition: (crcl) => crcl < 3, text: "CrCl < 3 : 100 mg/dose at extended intervals" }
+                        ]
+                    }
+                ]
+            },
+            {
+                category: "ยาแก้แพ้",
+                drugs: [
+                    {
+                        name: "Fexofenadine",
+                        rules: [
+                            { condition: (crcl) => crcl >= 80, text: "CrCl >= 80 : ไม่มีข้อมูลแนะนำปรับลดในตาราง (พิจารณาขนาดยาปกติ)" },
+                            { condition: (crcl) => crcl < 80, text: "CrCl < 80 : 60 mg OD" }
+                        ]
+                    },
+                    {
+                        name: "Cetirizine",
+                        rules: [
+                            { condition: (crcl) => crcl >= 60, text: "CrCl >= 60 : ไม่มีข้อมูลแนะนำปรับลดในตาราง (พิจารณาขนาดยาปกติ)" },
+                            { condition: (crcl) => crcl < 60, text: "CrCl < 60 : 5 mg orally once daily suggested" }
+                        ]
+                    },
+                    {
+                        name: "Levocetirizine",
+                        rules: [
+                            { condition: (crcl) => crcl > 80, text: "CrCl > 80 : ไม่มีข้อมูลแนะนำปรับลดในตาราง (พิจารณาขนาดยาปกติ)" },
+                            { condition: (crcl) => crcl >= 50 && crcl <= 80, text: "CrCl 50 to 80 : 2.5 mg once daily" },
+                            { condition: (crcl) => crcl >= 30 && crcl < 50, text: "CrCl 30 to 50 : 2.5 mg once every other day" },
+                            { condition: (crcl) => crcl >= 10 && crcl < 30, text: "CrCl 10 to 30 : 2.5 mg twice weekly" },
+                            { condition: (crcl) => crcl < 10, text: "CrCl < 10 : <span class=\"text-danger fw-bold\">ห้ามใช้!</span>" }
+                        ]
+                    }
+                ]
+            },
+            {
+                category: "ยาทางเดินอาหาร",
+                drugs: [
+                    {
+                        name: "Bismuth Subsalicylate",
+                        rules: [
+                            { condition: (crcl) => crcl >= 60, text: "CrCl >= 60 : ไม่มีข้อมูลแนะนำปรับลดในตาราง (พิจารณาขนาดยาปกติ)" },
+                            { condition: (crcl) => crcl < 60 && crcl >= 30, text: "CrCl < 60 : 524 mg to 1048 mg (30 mL to 60 mL) orally 4 times daily<br>CrCl 30 to 59 : 262 mg to 524 mg (15 mL to 30 mL) orally 4 times daily" },
+                            { condition: (crcl) => crcl < 30, text: "CrCl < 30 : <span class=\"text-danger fw-bold\">ห้ามใช้!</span>" }
+                        ]
+                    },
+                    {
+                        name: "Aluminum Hydroxide/Magnesium Hydroxide",
+                        rules: [
+                            { condition: (crcl) => crcl >= 60, text: "CrCl >= 60 : ไม่มีข้อมูลแนะนำปรับลดในตาราง (พิจารณาขนาดยาปกติ)" },
+                            { condition: (crcl) => crcl >= 30 && crcl <= 59, text: "CrCl 30 to 59 : <span class=\"text-warning fw-bold\">ระมัดระวังในการใช้</span>" },
+                            { condition: (crcl) => crcl < 30, text: "CrCl < 30 : <span class=\"text-danger fw-bold\">หลีกเลี่ยง!</span>" }
+                        ]
+                    }
+                ]
+            },
+            {
+                category: "ยาลดระดับน้ำตาลในเลือด",
+                drugs: [
+                    {
+                        name: "Metformin",
+                        rules: [
+                            { condition: (crcl) => crcl > 60, text: "CrCl > 60 : ไม่ต้องปรับขนาดยา" },
+                            { condition: (crcl) => crcl >= 40 && crcl <= 59, text: "CrCl 40 to 59 : ขนาดยาไม่ควรเกิน 2000 mg/วัน" },
+                            { condition: (crcl) => crcl >= 30 && crcl < 40, text: "CrCl 30 to 44 : ขนาดยาไม่เกิน 1000 mg/วัน" },
+                            { condition: (crcl) => crcl < 30, text: "CrCl < 30 : <span class=\"text-danger fw-bold\">ห้ามใช้!</span>" }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        document.getElementById('crcl-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const gender = document.querySelector('input[name="gender"]:checked').value;
+            const age = parseFloat(document.getElementById('age').value);
+            const weight = parseFloat(document.getElementById('weight').value);
+            const scr = parseFloat(document.getElementById('scr').value);
+
+            // Cockcroft-Gault Equation
+            let crcl = ((140 - age) * weight) / (72 * scr);
+            if (gender === 'female') {
+                crcl = crcl * 0.85;
+            }
+
+            // Round to 2 decimal places
+            const formattedCrCl = crcl.toFixed(2);
+
+            // Update UI
+            document.getElementById('crcl-value').innerText = formattedCrCl;
+            document.getElementById('result-section').style.display = 'block';
+
+            // Scroll to results smoothly
+            document.getElementById('result-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            // Render table
+            renderTable(crcl);
+        });
+
+        function renderTable(crcl) {
+            const tbody = document.getElementById('dosing-body');
+            tbody.innerHTML = '';
+
+            db.forEach(cat => {
+                // Add category row
+                const catRow = document.createElement('tr');
+                catRow.innerHTML = `<td colspan="2" class="category-row"><i class="fa-solid fa-layer-group"></i> ${cat.category}</td>`;
+                tbody.appendChild(catRow);
+
+                cat.drugs.forEach(drug => {
+                    const matchedRules = drug.rules.filter(r => r.condition(crcl));
+
+                    let recommendationHTML = '';
+                    if (matchedRules.length > 0) {
+                        recommendationHTML = matchedRules.map(r => r.text).join('<br>');
+                    } else {
+                        recommendationHTML = '<span class="text-muted">ไม่พบข้อมูลคำแนะนำสำหรับช่วง CrCl นี้</span>';
+                    }
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="drug-name">${drug.name}</td>
+                        <td>${recommendationHTML}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            });
+        }
+    </script>
+</body>
+
+</html>
