@@ -217,11 +217,29 @@
         let currentCalculatedTWD = 0;
         let currentStatusText = "";
 
-        // --- History & Storage Logic ---
-        let savedHistory = JSON.parse(localStorage.getItem('warfarin_history')) || [];
-        renderHistoryTable();
+        // --- History & Storage Logic (Google Sheets integration) ---
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzWRSS_hQC0GLMaF48wkYz-9ZRIYx0UkSV9eQ0ntFnTs8Qg4g6ls5TxA8ib3A55PQwHhg/exec';
+        let savedHistory = [];
 
-        function saveDataToHistory() {
+        // เรียกดึงข้อมูลครั้งแรกเมื่อโหลดหน้า
+        fetchHistoryData();
+
+        async function fetchHistoryData() {
+            const tbody = document.getElementById('historyTableBody');
+            tbody.innerHTML = `<tr><td colspan="8" class="text-center py-8"><i class="fa-solid fa-spinner fa-spin text-brand-500 text-3xl"></i><p class="mt-2 text-slate-500 font-bold">กำลังโหลดข้อมูลจากฐานข้อมูล...</p></td></tr>`;
+            document.getElementById('emptyHistoryMsg').classList.add('hidden');
+
+            try {
+                const response = await fetch(SCRIPT_URL + '?t=' + new Date().getTime(), { cache: 'no-store' });
+                savedHistory = await response.json();
+                renderHistoryTable();
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-red-500"><i class="fa-solid fa-circle-exclamation text-3xl"></i><p class="mt-2 font-bold">เกิดข้อผิดพลาดในการโหลดข้อมูล</p></td></tr>`;
+            }
+        }
+
+        async function saveDataToHistory() {
             const name = document.getElementById('patientName').value.trim();
             const note = document.getElementById('userNote').value.trim();
 
@@ -244,13 +262,35 @@
                 note: note
             };
 
-            savedHistory.unshift(record);
-            localStorage.setItem('warfarin_history', JSON.stringify(savedHistory));
+            const btn = document.querySelector('button[onclick="saveDataToHistory()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึกข้อมูล...';
+            btn.disabled = true;
+            btn.classList.add('opacity-70', 'cursor-not-allowed');
 
-            alert("บันทึกข้อมูลเรียบร้อยแล้ว!");
-            document.getElementById('userNote').value = "";
-            renderHistoryTable();
-            document.querySelector('.fa-clock-rotate-left').scrollIntoView({ behavior: 'smooth' });
+            try {
+                const formData = new URLSearchParams();
+                formData.append('action', 'save');
+                formData.append('data', JSON.stringify(record));
+
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                });
+
+                alert("บันทึกข้อมูลลงฐานข้อมูลเรียบร้อยแล้ว!");
+                document.getElementById('userNote').value = "";
+                await fetchHistoryData();
+                document.querySelector('.fa-clock-rotate-left').scrollIntoView({ behavior: 'smooth' });
+            } catch (error) {
+                console.error('Error saving data:', error);
+                alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                btn.classList.remove('opacity-70', 'cursor-not-allowed');
+            }
         }
 
         function renderHistoryTable() {
@@ -265,6 +305,7 @@
             msg.classList.add('hidden');
 
             savedHistory.forEach((item, index) => {
+                const rowIndex = item.rowIndex || 0;
                 const tr = document.createElement('tr');
                 tr.className = "bg-white border-b hover:bg-slate-50 transition group";
                 tr.innerHTML = `
@@ -278,7 +319,7 @@
                     </td>
                     <td class="px-4 py-4 text-slate-500 text-sm max-w-[150px] truncate" title="${item.note}">${item.note || '-'}</td>
                     <td class="px-4 py-4 text-center">
-                        <button onclick="deleteSingleHistory(${index})" class="text-slate-300 hover:text-red-500 transition p-2 rounded-full hover:bg-red-50" title="ลบรายการนี้">
+                        <button onclick="deleteSingleHistory(${index}, ${rowIndex})" class="text-slate-300 hover:text-red-500 transition p-2 rounded-full hover:bg-red-50" title="ลบรายการนี้">
                             <i class="fa-solid fa-trash"></i>
                         </button>
                     </td>
@@ -287,19 +328,57 @@
             });
         }
 
-        function deleteSingleHistory(index) {
+        async function deleteSingleHistory(index, rowIndex) {
             if (confirm('คุณต้องการลบรายการนี้ใช่หรือไม่?')) {
-                savedHistory.splice(index, 1);
-                localStorage.setItem('warfarin_history', JSON.stringify(savedHistory));
-                renderHistoryTable();
+                const tbody = document.getElementById('historyTableBody');
+                const rows = tbody.getElementsByTagName('tr');
+                if(rows[index]) {
+                    rows[index].innerHTML = `<td colspan="8" class="text-center py-4"><i class="fa-solid fa-spinner fa-spin text-red-500 mr-2"></i>กำลังลบข้อมูล...</td>`;
+                }
+
+                try {
+                    const formData = new URLSearchParams();
+                    formData.append('action', 'delete');
+                    formData.append('index', index);
+                    formData.append('rowIndex', rowIndex);
+
+                    await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        body: formData,
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                    });
+                    
+                    await fetchHistoryData();
+                } catch (error) {
+                    console.error('Error deleting data:', error);
+                    alert("เกิดข้อผิดพลาดในการลบข้อมูล");
+                    renderHistoryTable(); // Restore view
+                }
             }
         }
 
-        function clearAllHistory() {
+        async function clearAllHistory() {
             if (confirm('คำเตือน: คุณต้องการลบประวัติ "ทั้งหมด" ใช่หรือไม่? (ไม่สามารถกู้คืนได้เว้นแต่จะมีไฟล์ Backup)')) {
-                savedHistory = [];
-                localStorage.removeItem('warfarin_history');
-                renderHistoryTable();
+                const tbody = document.getElementById('historyTableBody');
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-8"><i class="fa-solid fa-spinner fa-spin text-red-500 text-3xl"></i><p class="mt-2 text-slate-500 font-bold">กำลังลบข้อมูลทั้งหมด...</p></td></tr>`;
+
+                try {
+                    const formData = new URLSearchParams();
+                    formData.append('action', 'clear');
+
+                    await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        body: formData,
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                    });
+                    
+                    await fetchHistoryData();
+                    alert("ลบข้อมูลทั้งหมดเรียบร้อยแล้ว");
+                } catch (error) {
+                    console.error('Error clearing data:', error);
+                    alert("เกิดข้อผิดพลาดในการลบข้อมูลทั้งหมด");
+                    renderHistoryTable(); // Restore view
+                }
             }
         }
 
@@ -319,18 +398,31 @@
             const file = input.files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = function (e) {
+            reader.onload = async function (e) {
                 try {
                     const loadedData = JSON.parse(e.target.result);
                     if (Array.isArray(loadedData)) {
-                        if (confirm(`พบข้อมูล ${loadedData.length} รายการ ต้องการนำเข้าหรือไม่? (ข้อมูลเก่าจะถูกแทนที่)`)) {
-                            savedHistory = loadedData;
-                            localStorage.setItem('warfarin_history', JSON.stringify(savedHistory));
-                            renderHistoryTable();
-                            alert("กู้คืนข้อมูลสำเร็จ!");
+                        if (confirm(`พบข้อมูล ${loadedData.length} รายการ เนื่องจากตอนนี้ระบบใช้ฐานข้อมูลออนไลน์ การกู้คืนจะทยอยอัปโหลดข้อมูลเข้าสู่ Google Sheets ทีละรายการ อาจใช้เวลาสักครู่ คุณต้องการดำเนินการต่อหรือไม่?`)) {
+                            const tbody = document.getElementById('historyTableBody');
+                            tbody.innerHTML = `<tr><td colspan="8" class="text-center py-8"><i class="fa-solid fa-spinner fa-spin text-brand-500 text-3xl"></i><p class="mt-2 text-slate-500 font-bold">กำลังอัปโหลดข้อมูล ${loadedData.length} รายการ...</p></td></tr>`;
+                            
+                            // To avoid overwhelming the server, we can send sequentially
+                            for(let i = loadedData.length - 1; i >= 0; i--) {
+                                const record = loadedData[i];
+                                const formData = new URLSearchParams();
+                                formData.append('action', 'save');
+                                formData.append('data', JSON.stringify(record));
+                                await fetch(SCRIPT_URL, {
+                                    method: 'POST',
+                                    body: formData,
+                                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                                });
+                            }
+                            await fetchHistoryData();
+                            alert("กู้คืนข้อมูลเข้าสู่ฐานข้อมูลสำเร็จ!");
                         }
                     } else { alert("ไฟล์ไม่ถูกต้อง"); }
-                } catch (error) { alert("Error reading file"); }
+                } catch (error) { alert("Error reading file or uploading"); }
             };
             reader.readAsText(file);
             input.value = '';
